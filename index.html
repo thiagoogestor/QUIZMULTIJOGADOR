@@ -54,9 +54,9 @@
             background-color: #c7d2fe;
         }
         .quiz-option {
-            font-size: 0.875rem; /* Smaller font for more options */
-            padding: 0.5rem 1rem;
-            justify-content: center;
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
+            justify-content: flex-start; /* Align text to the left */
         }
         .quiz-option.selected {
             background-color: #4f46e5;
@@ -152,7 +152,7 @@
             <div id="host-controls" class="hidden mt-8">
                 <div id="host-quiz-selection">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Escolha o Tema do Quiz:</h3>
-                    <div id="quiz-options-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6"></div>
+                    <div id="quiz-options-container" class="grid grid-cols-1 gap-2 mb-6"></div>
                 </div>
                 <button id="start-game-btn" class="btn btn-primary w-full justify-center" disabled>Começar o Jogo!</button>
             </div>
@@ -255,6 +255,31 @@
                     { question: "Qual o coletivo de cães?", answers: ["Manada", "Cardume", "Alcateia", "Rebanho"], correct: 2 },
                     { question: "Qual o ponto mais alto do Brasil?", answers: ["Pico da Neblina", "Pico 31 de Março", "Monte Roraima", "Pico da Bandeira"], correct: 0 },
                     { question: "Quantos lados tem um heptágono?", answers: ["5", "6", "7", "8"], correct: 2 }
+                ]
+            },
+             "geral2": {
+                name: "Conhecimentos Gerais 2",
+                questions: [
+                    { question: "Qual o livro mais vendido no mundo, a seguir à Bíblia?", answers: ["Dom Quixote", "O Senhor dos Anéis", "O Pequeno Príncipe", "Harry Potter"], correct: 0 },
+                    { question: "Qual a nacionalidade de Pablo Picasso?", answers: ["Italiana", "Francesa", "Espanhola", "Portuguesa"], correct: 2 },
+                    { question: "Qual o metal mais abundante na crosta terrestre?", answers: ["Ferro", "Cobre", "Ouro", "Alumínio"], correct: 3 },
+                    { question: "Em que país nasceu a pizza?", answers: ["Grécia", "Itália", "Estados Unidos", "França"], correct: 1 },
+                    { question: "Qual destes planetas não tem anéis?", answers: ["Saturno", "Júpiter", "Vénus", "Urano"], correct: 2 },
+                    { question: "Quantas patas tem uma aranha?", answers: ["6", "8", "10", "12"], correct: 1 },
+                    { question: "Qual a cidade conhecida como a 'Big Apple'?", answers: ["Los Angeles", "Chicago", "Miami", "Nova Iorque"], correct: 3 },
+                    { question: "Quem foi a primeira mulher a ganhar um Prémio Nobel?", answers: ["Marie Curie", "Rosalind Franklin", "Ada Lovelace", "Dorothy Hodgkin"], correct: 0 },
+                    { question: "Qual o nome do maior osso do corpo humano?", answers: ["Tíbia", "Fêmur", "Úmero", "Pelve"], correct: 1 },
+                    { question: "Quantos dentes tem um ser humano adulto?", answers: ["28", "30", "32", "26"], correct: 2 },
+                    { question: "Qual o nome do processo de conversão de açúcar em álcool?", answers: ["Fotossíntese", "Respiração", "Digestão", "Fermentação"], correct: 3 },
+                    { question: "Em que cidade se encontram as ruínas de Machu Picchu?", answers: ["México", "Chile", "Bolívia", "Peru"], correct: 3 },
+                    { question: "Qual a capital da Austrália?", answers: ["Sydney", "Melbourne", "Camberra", "Brisbane"], correct: 2 },
+                    { question: "Qual o animal que consegue sobreviver mais tempo sem água?", answers: ["Camelo", "Rato-canguru", "Elefante", "Girafa"], correct: 1 },
+                    { question: "Qual o nome do criador da personagem de BD 'Tintim'?", answers: ["Goscinny", "Uderzo", "Hergé", "Franquin"], correct: 2 },
+                    { question: "Qual o nome do deus do trovão na mitologia nórdica?", answers: ["Odin", "Loki", "Thor", "Freyr"], correct: 2 },
+                    { question: "Qual o oceano mais frio do mundo?", answers: ["Pacífico", "Atlântico", "Índico", "Ártico"], correct: 3 },
+                    { question: "Qual a cor que resulta da mistura de azul e amarelo?", answers: ["Roxo", "Laranja", "Verde", "Cinzento"], correct: 2 },
+                    { question: "Qual o nome da primeira pessoa a viajar para o espaço?", answers: ["Neil Armstrong", "Buzz Aldrin", "Yuri Gagarin", "John Glenn"], correct: 2 },
+                    { question: "Qual o animal que tem o maior cérebro em proporção ao seu corpo?", answers: ["Humano", "Golfinho", "Elefante", "Formiga"], correct: 3 }
                 ]
             },
             "ciencia": {
@@ -706,7 +731,7 @@
                 name: playerName,
                 score: 0,
                 hasAnswered: false,
-                answeredQuestionIndex: null, // Initial state
+                answeredQuestionIndex: null,
                 selectedAnswer: null
             });
             await batch.commit();
@@ -736,7 +761,7 @@
                     name: playerName, 
                     score: 0, 
                     hasAnswered: false,
-                    answeredQuestionIndex: null, // Initial state
+                    answeredQuestionIndex: null,
                     selectedAnswer: null
                 });
                 await attachToGame(gameCode);
@@ -817,11 +842,11 @@
         function renderQuizOptions() {
             const container = document.getElementById('quiz-options-container');
             container.innerHTML = '';
-            Object.keys(quizzes).forEach(quizId => {
+            Object.keys(quizzes).forEach((quizId, index) => {
                 const quiz = quizzes[quizId];
                 const button = document.createElement('button');
                 button.className = 'btn btn-secondary quiz-option';
-                button.textContent = quiz.name;
+                button.innerHTML = `<span class="mr-3">${index + 1}.</span> ${quiz.name}`;
                 button.dataset.quizId = quizId;
                 button.onclick = () => {
                     selectedQuizId = quizId;
