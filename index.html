@@ -591,6 +591,8 @@
                 name: playerName,
                 score: 0,
                 hasAnswered: false,
+                answeredQuestionIndex: null, // Initial state
+                selectedAnswer: null
             });
             await batch.commit();
 
@@ -615,7 +617,13 @@
             if (gameDoc.exists() && gameDoc.data().gameState === 'lobby') {
                 currentGameId = gameCode;
                 const playerRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode, "players", currentUser.uid);
-                await setDoc(playerRef, { name: playerName, score: 0, hasAnswered: false, });
+                await setDoc(playerRef, { 
+                    name: playerName, 
+                    score: 0, 
+                    hasAnswered: false,
+                    answeredQuestionIndex: null, // Initial state
+                    selectedAnswer: null
+                });
                 await attachToGame(gameCode);
             } else {
                 document.getElementById('error-message').textContent = 'Sala não encontrada ou o jogo já começou.';
@@ -676,15 +684,15 @@
                 return;
             }
 
-            const allAnswered = currentPlayers.every(p => p.hasAnswered);
+            const allAnsweredThisQuestion = currentPlayers.every(p => p.hasAnswered && p.answeredQuestionIndex === currentGameData.currentQuestionIndex);
             
-            if (allAnswered) {
+            if (allAnsweredThisQuestion) {
                 showVoteCounts();
             }
 
             const isHost = currentUser && currentUser.uid === currentGameData.hostId;
 
-            if (allAnswered && isHost) {
+            if (allAnsweredThisQuestion && isHost) {
                 nextButtonControls.classList.remove('hidden');
             } else {
                 nextButtonControls.classList.add('hidden');
@@ -716,7 +724,7 @@
             players.forEach(player => {
                 const li = document.createElement('li');
                 li.className = 'bg-indigo-100 text-indigo-800 font-semibold p-3 rounded-lg flex items-center justify-between';
-                li.innerHTML = `${player.name} ${player.hasAnswered ? '✔️' : ''}`;
+                li.innerHTML = `${player.name} ${player.hasAnswered && player.answeredQuestionIndex === currentGameData.currentQuestionIndex ? '✔️' : ''}`;
                 playerList.appendChild(li);
             });
 
@@ -784,13 +792,14 @@
             const playerDoc = await getDoc(playerRef);
             if(playerDoc.data().hasAnswered) return;
 
-            // FIX: Score is calculated and written in the same atomic operation
             const gameDoc = await getDoc(doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId));
-            const question = quizzes[gameDoc.data().quizId].questions[gameDoc.data().currentQuestionIndex];
+            const gameData = gameDoc.data();
+            const question = quizzes[gameData.quizId].questions[gameData.currentQuestionIndex];
             
             const updates = {
                 hasAnswered: true,
-                selectedAnswer: selectedIndex
+                selectedAnswer: selectedIndex,
+                answeredQuestionIndex: gameData.currentQuestionIndex
             };
             if(selectedIndex === question.correct) {
                 updates.score = playerDoc.data().score + 10;
@@ -804,9 +813,8 @@
         }
 
         function showVoteCounts() {
-            // FIX: Add guard to prevent running on new questions before answers are in
-            const allHaveSelected = currentPlayers.every(p => p.selectedAnswer !== null && p.selectedAnswer !== undefined);
-            if (!allHaveSelected) {
+            const allHaveAnsweredCurrentQuestion = currentPlayers.every(p => p.hasAnswered && p.answeredQuestionIndex === currentGameData.currentQuestionIndex);
+            if (!allHaveAnsweredCurrentQuestion) {
                 return;
             }
 
@@ -819,7 +827,7 @@
                 
                 const voteCounts = [0, 0, 0, 0];
                 currentPlayers.forEach(p => {
-                    if (p.selectedAnswer !== null && p.selectedAnswer !== undefined) {
+                    if (p.answeredQuestionIndex === gameData.currentQuestionIndex && p.selectedAnswer !== null) {
                         voteCounts[p.selectedAnswer]++;
                     }
                 });
@@ -880,7 +888,7 @@
             const batch = writeBatch(db);
             const playersSnapshot = await getDocs(playersRef);
             playersSnapshot.forEach(playerDoc => {
-                batch.update(playerDoc.ref, { hasAnswered: false, selectedAnswer: null });
+                batch.update(playerDoc.ref, { hasAnswered: false, selectedAnswer: null, answeredQuestionIndex: null });
             });
 
             const quiz = quizzes[gameData.quizId];
@@ -907,7 +915,7 @@
 
             batch.update(gameRef, { gameState: 'lobby', currentQuestionIndex: -1, quizId: null });
             playersSnapshot.forEach(playerDoc => {
-                batch.update(playerDoc.ref, { score: 0, hasAnswered: false, selectedAnswer: null });
+                batch.update(playerDoc.ref, { score: 0, hasAnswered: false, selectedAnswer: null, answeredQuestionIndex: null });
             });
             await batch.commit();
         });
