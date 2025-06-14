@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Multiplayer para Família</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        .btn {
+            display: inline-block;
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle;
+            user-select: none;
+            border: 1px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: 0.5rem;
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-primary {
+            color: #fff;
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: #4338ca;
+            border-color: #3730a3;
+        }
+        .btn-secondary {
+            color: #4f46e5;
+            background-color: #e0e7ff;
+            border-color: transparent;
+        }
+        .btn-secondary:hover {
+            background-color: #c7d2fe;
+        }
+        .quiz-option.selected {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #4338ca;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.4);
+        }
+        .input-field {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #111827;
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        #game-code-display {
+            background-color: #f3f4f6;
+            border: 2px dashed #d1d5db;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #374151;
+            cursor: pointer;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="max-w-2xl w-full mx-auto">
+        <!-- Tela de Início / Lobby -->
+        <div id="lobby-screen" class="card text-center">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Quiz em Família!</h1>
+            <p class="text-gray-600 mb-8">Crie uma sala ou junte-se a uma existente para começar a diversão.</p>
+
+            <div class="space-y-4">
+                <input type="text" id="player-name" class="input-field text-center" placeholder="Digite seu nome">
+                <button id="create-game-btn" class="btn btn-primary w-full">Criar Novo Jogo</button>
+                <div class="flex items-center my-4">
+                    <hr class="flex-grow border-t border-gray-300">
+                    <span class="px-4 text-gray-500 font-semibold">OU</span>
+                    <hr class="flex-grow border-t border-gray-300">
+                </div>
+                <input type="text" id="game-code-input" class="input-field text-center" placeholder="Digite o código da sala">
+                <button id="join-game-btn" class="btn btn-secondary w-full">Entrar no Jogo</button>
+            </div>
+            <div id="error-message" class="text-red-500 mt-4 font-semibold"></div>
+            <div class="mt-6 text-xs text-gray-400">
+                <p>Seu ID de Jogador: <span id="user-id-display"></span></p>
+            </div>
+        </div>
+
+        <!-- Tela de Espera -->
+        <div id="waiting-room-screen" class="hidden card">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Sala de Espera</h2>
+            <p class="text-gray-600 mb-4">Compartilhe o código com outros jogadores!</p>
+            <div id="game-code-display" title="Clique para copiar"><span id="game-code-text"></span></div>
+            <p class="text-sm text-gray-500 mt-2 text-center">Clique no código para copiar</p>
+            
+            <h3 class="text-xl font-semibold text-gray-700 mt-8 mb-4">Jogadores na Sala:</h3>
+            <ul id="player-list" class="space-y-2"></ul>
+            
+            <div id="host-controls" class="hidden mt-8">
+                <div id="host-quiz-selection">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Escolha o Tema do Quiz:</h3>
+                    <div id="quiz-options-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
+                </div>
+                <button id="start-game-btn" class="btn btn-primary w-full" disabled>Começar o Jogo!</button>
+            </div>
+            <p id="waiting-for-host" class="mt-8 text-center text-gray-600 font-semibold">Aguardando o anfitrião escolher um tema e iniciar o jogo...</p>
+        </div>
+
+        <!-- Tela do Jogo -->
+        <div id="game-screen" class="hidden card">
+            <div class="flex justify-between items-center mb-4">
+                 <div>
+                    <div class="text-sm font-medium text-gray-500" id="quiz-name-display"></div>
+                    <div class="text-lg font-bold text-indigo-600">Pergunta <span id="question-number"></span>/<span id="total-questions"></span></div>
+                 </div>
+                <div id="scoreboard-toggle" class="cursor-pointer font-semibold text-indigo-600 hover:underline">Ver Pontuação</div>
+            </div>
+            <div id="question-container" class="mb-6">
+                <p id="question-text" class="text-2xl font-semibold text-gray-800 text-center"></p>
+            </div>
+            <div id="answers-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div id="feedback-container" class="mt-6 text-center text-xl font-bold"></div>
+            <div id="next-question-controls" class="hidden mt-6 text-center">
+                 <button id="next-question-btn" class="btn btn-primary">Próxima Pergunta</button>
+            </div>
+        </div>
+
+        <!-- Tela de Pontuação (Modal) -->
+        <div id="scoreboard-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div class="card w-full max-w-md">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Pontuação</h2>
+                <ul id="scoreboard-list" class="space-y-2"></ul>
+                <button id="close-scoreboard-btn" class="btn btn-secondary mt-6 w-full">Fechar</button>
+            </div>
+        </div>
+        
+        <!-- Tela Final -->
+        <div id="end-screen" class="hidden card text-center">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Fim de Jogo!</h1>
+            <h2 class="text-2xl font-semibold text-indigo-600 mb-6">O grande vencedor é... <span id="winner-name" class="text-3xl"></span>!</h2>
+            <h3 class="text-xl font-semibold text-gray-700 mt-8 mb-4">Placar Final:</h3>
+            <ul id="final-scoreboard-list" class="space-y-3"></ul>
+            <button id="play-again-btn" class="btn btn-primary mt-8 w-full">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, writeBatch, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-quiz-app';
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        setLogLevel('debug');
+
+        let currentUser = null;
+        let currentGameId = null;
+        let unsubscribeGame = null;
+        let unsubscribePlayers = null;
+        let selectedQuizId = null;
+        let currentPlayers = [];
+        let currentGameData = null;
+        
+        // BANCO DE PERGUNTAS
+        const quizzes = {
+            "geral": {
+                name: "Conhecimentos Gerais",
+                questions: [
+                    { question: "Qual é a capital do Brasil?", answers: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], correct: 2 },
+                    { question: "Quantos planetas existem no sistema solar?", answers: ["7", "8", "9", "10"], correct: 1 },
+                    { question: "Qual o maior animal do mundo?", answers: ["Elefante", "Tubarão Baleia", "Baleia Azul", "Girafa"], correct: 2 },
+                    { question: "Quem escreveu 'Dom Quixote'?", answers: ["Machado de Assis", "Miguel de Cervantes", "Shakespeare", "Fernando Pessoa"], correct: 1 },
+                    { question: "Qual país ganhou a primeira Copa do Mundo?", answers: ["Brasil", "Argentina", "Itália", "Uruguai"], correct: 3 },
+                    { question: "Em que ano o homem pisou na Lua pela primeira vez?", answers: ["1969", "1972", "1965", "1980"], correct: 0 },
+                    { question: "Qual é o rio mais longo do mundo?", answers: ["Rio Nilo", "Rio Amazonas", "Rio Mississipi", "Rio Yangtzé"], correct: 1 },
+                    { question: "Quem pintou a Mona Lisa?", answers: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2 },
+                    { question: "Qual é o metal mais precioso?", answers: ["Prata", "Ouro", "Platina", "Ródio"], correct: 3 },
+                    { question: "Quantos lados tem um hexágono?", answers: ["5", "6", "7", "8"], correct: 1 },
+                    { question: "Qual o nome do oceano que banha o Brasil?", answers: ["Pacífico", "Índico", "Atlântico", "Ártico"], correct: 2 },
+                    { question: "Qual a montanha mais alta do mundo?", answers: ["Monte Everest", "K2", "Kangchenjunga", "Lhotse"], correct: 0 },
+                    { question: "Qual desses países não faz fronteira com o Brasil?", answers: ["Argentina", "Colômbia", "Chile", "Uruguai"], correct: 2 },
+                    { question: "Quantos estados tem o Brasil?", answers: ["25 e 1 DF", "26 e 1 DF", "27 e 1 DF", "24 e 1 DF"], correct: 1 },
+                    { question: "Qual o prato típico mais famoso da Bahia?", answers: ["Feijoada", "Moqueca", "Vatapá", "Acarajé"], correct: 3 },
+                    { question: "Qual o significado da sigla 'PIB'?", answers: ["Produto Interno Bruto", "Preço Ideal de Bens", "Padrão Industrial Básico", "Plano de Importação Brasileiro"], correct: 0 },
+                    { question: "Em que continente fica o Egito?", answers: ["Ásia", "Europa", "África", "Oceania"], correct: 2 },
+                    { question: "Qual o plural de 'cidadão'?", answers: ["Cidadãos", "Cidadões", "Cidades", "Cidadãs"], correct: 0 },
+                    { question: "Quem foi o primeiro presidente do Brasil?", answers: ["Dom Pedro II", "Getúlio Vargas", "Deodoro da Fonseca", "Prudente de Morais"], correct: 2 },
+                    { question: "Qual a fórmula química da água?", answers: ["CO2", "O2", "H2O2", "H2O"], correct: 3 },
+                ]
+            },
+            "ciencia": {
+                name: "Ciência e Tecnologia",
+                questions: [
+                    { question: "Qual elemento químico tem o símbolo 'O'?", answers: ["Ouro", "Oxigênio", "Ósmio", "Hélio"], correct: 1 },
+                    { question: "Qual a velocidade da luz no vácuo?", answers: ["300.000 km/h", "300.000 km/s", "150.000 km/s", "Infinita"], correct: 1 },
+                    { question: "Quem é considerado o pai da computação?", answers: ["Alan Turing", "Bill Gates", "Steve Jobs", "Tim Berners-Lee"], correct: 0 },
+                    { question: "O que mede um sismógrafo?", answers: ["Ventos", "Marés", "Temperatura", "Terremotos"], correct: 3 },
+                    { question: "Qual planeta é conhecido como 'Planeta Vermelho'?", answers: ["Vênus", "Marte", "Júpiter", "Saturno"], correct: 1 },
+                    { question: "Qual o nome do processo que as plantas usam para se alimentar?", answers: ["Respiração", "Transpiração", "Fotossíntese", "Digestão"], correct: 2 },
+                    { question: "Quem desenvolveu a teoria da relatividade?", answers: ["Isaac Newton", "Galileu Galilei", "Albert Einstein", "Nikola Tesla"], correct: 2 },
+                    { question: "Qual o primeiro animal a ser clonado?", answers: ["Cachorro", "Gato", "Ovelha", "Vaca"], correct: 2 },
+                    { question: "Qual o gás mais abundante na atmosfera terrestre?", answers: ["Oxigênio", "Dióxido de Carbono", "Hidrogênio", "Nitrogênio"], correct: 3 },
+                    { question: "Qual a função dos glóbulos brancos?", answers: ["Transportar oxigênio", "Defender o corpo", "Coagular o sangue", "Produzir hormônios"], correct: 1 },
+                    { question: "O que é um 'byte'?", answers: ["Unidade de som", "Unidade de cor", "Unidade de informação digital", "Unidade de velocidade"], correct: 2 },
+                    { question: "Qual a camada mais externa da Terra?", answers: ["Manto", "Núcleo", "Crosta", "Atmosfera"], correct: 2 },
+                    { question: "Qual desses não é um sistema operacional?", answers: ["Windows", "Linux", "Microsoft Office", "Android"], correct: 2 },
+                    { question: "Qual o nome da galáxia em que vivemos?", answers: ["Andrômeda", "Via Láctea", "Triângulo", "Sombrero"], correct: 1 },
+                    { question: "Quem inventou o telefone?", answers: ["Thomas Edison", "Nikola Tesla", "Santos Dumont", "Alexander Graham Bell"], correct: 3 },
+                    { question: "Qual o osso mais longo do corpo humano?", answers: ["Tíbia", "Fêmur", "Úmero", "Rádio"], correct: 1 },
+                    { question: "O que é a 'penicilina'?", answers: ["Um vírus", "Uma bactéria", "Um analgésico", "Um antibiótico"], correct: 3 },
+                    { question: "Qual o nome do primeiro satélite artificial lançado ao espaço?", answers: ["Apollo 11", "Explorer 1", "Sputnik 1", "Vostok 1"], correct: 2 },
+                    { question: "Qual animal hiberna durante o inverno?", answers: ["Leão", "Girafa", "Urso", "Pinguim"], correct: 2 },
+                    { question: "De que é feito o vidro?", answers: ["Plástico derretido", "Argila aquecida", "Areia de sílica", "Metal líquido"], correct: 2 },
+                ]
+            },
+            "artes": {
+                name: "Artes e Entretenimento",
+                questions: [
+                    { question: "Quem dirigiu o filme 'Titanic' de 1997?", answers: ["Steven Spielberg", "George Lucas", "James Cameron", "Quentin Tarantino"], correct: 2 },
+                    { question: "Qual banda de rock é conhecida como 'The Fab Four'?", answers: ["The Rolling Stones", "The Beatles", "Queen", "Led Zeppelin"], correct: 1 },
+                    { question: "Qual destes atores ganhou um Oscar por 'O Regresso'?", answers: ["Brad Pitt", "Johnny Depp", "Leonardo DiCaprio", "Tom Hanks"], correct: 2 },
+                    { question: "Quem escreveu a saga 'Harry Potter'?", answers: ["J. R. R. Tolkien", "J. K. Rowling", "George R. R. Martin", "C. S. Lewis"], correct: 1 },
+                    { question: "Qual o nome do vocalista da banda Queen?", answers: ["Freddie Mercury", "Elton John", "David Bowie", "Mick Jagger"], correct: 0 },
+                    { question: "Qual o nome do parque temático do filme 'Jurassic Park'?", answers: ["Ilha Nublar", "Ilha Sorna", "Terra da Fantasia", "Mundo Perdido"], correct: 0 },
+                    { question: "Qual destes pintores é famoso por cortar a própria orelha?", answers: ["Pablo Picasso", "Claude Monet", "Salvador Dalí", "Vincent van Gogh"], correct: 3 },
+                    { question: "Qual é o nome do personagem principal de 'O Poderoso Chefão'?", answers: ["Michael Corleone", "Tony Montana", "Sonny Corleone", "Vito Corleone"], correct: 3 },
+                    { question: "Qual instrumento musical era a especialidade de Louis Armstrong?", answers: ["Saxofone", "Piano", "Trompete", "Bateria"], correct: 2 },
+                    { question: "Qual filme ganhou o primeiro Oscar de Melhor Animação?", answers: ["A Bela e a Fera", "O Rei Leão", "Toy Story", "Shrek"], correct: 3 },
+                    { question: "Qual o nome do robô amigo de Luke Skywalker em 'Star Wars'?", answers: ["C-3PO", "BB-8", "R2-D2", "Chewbacca"], correct: 2 },
+                    { question: "Quem é o autor da famosa peça 'Romeu e Julieta'?", answers: ["Machado de Assis", "Charles Dickens", "William Shakespeare", "Dante Alighieri"], correct: 2 },
+                    { question: "Qual série de TV se passa em Westeros?", answers: ["The Witcher", "Game of Thrones", "Vikings", "The Last Kingdom"], correct: 1 },
+                    { question: "Qual cantor é conhecido como o 'Rei do Pop'?", answers: ["Elvis Presley", "James Brown", "Michael Jackson", "Prince"], correct: 2 },
+                    { question: "De qual país o tango é uma dança tradicional?", answers: ["Espanha", "Brasil", "México", "Argentina"], correct: 3 },
+                    { question: "Qual o nome do bruxo que é o principal vilão em Harry Potter?", answers: ["Dumbledore", "Snape", "Voldemort", "Sirius Black"], correct: 2 },
+                    { question: "Quem canta a música 'Bohemian Rhapsody'?", answers: ["Pink Floyd", "The Doors", "U2", "Queen"], correct: 3 },
+                    { question: "Qual o nome do primeiro filme da Marvel Cinematic Universe (MCU)?", answers: ["O Incrível Hulk", "Homem de Ferro", "Capitão América", "Thor"], correct: 1 },
+                    { question: "Qual artista é conhecido por suas obras de 'action painting'?", answers: ["Andy Warhol", "Jackson Pollock", "Roy Lichtenstein", "Keith Haring"], correct: 1 },
+                    { question: "Qual o nome do protagonista da série 'Breaking Bad'?", answers: ["Jesse Pinkman", "Saul Goodman", "Gus Fring", "Walter White"], correct: 3 }
+                ]
+            }
+        };
+
+        const lobbyScreen = document.getElementById('lobby-screen');
+        const waitingRoomScreen = document.getElementById('waiting-room-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const screens = [lobbyScreen, waitingRoomScreen, gameScreen, endScreen];
+
+        function showScreen(screenToShow) {
+            screens.forEach(screen => screen.classList.add('hidden'));
+            screenToShow.classList.remove('hidden');
+        }
+
+        async function setupAuth() {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('user-id-display').textContent = user.uid;
+                } else {
+                    signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed", error));
+                }
+            });
+             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token).catch(err => signInAnonymously(auth));
+            } else if (!auth.currentUser) {
+                await signInAnonymously(auth);
+            }
+        }
+        
+        function getValidPlayerName() {
+            const playerName = document.getElementById('player-name').value.trim();
+            if (!playerName) {
+                document.getElementById('error-message').textContent = 'Por favor, digite seu nome!';
+                return null;
+            }
+            if (playerName.length > 15) {
+                document.getElementById('error-message').textContent = 'O nome deve ter no máximo 15 caracteres.';
+                return null;
+            }
+            document.getElementById('error-message').textContent = '';
+            return playerName;
+        }
+
+        document.getElementById('create-game-btn').addEventListener('click', async () => {
+            const playerName = getValidPlayerName();
+            if (!playerName || !currentUser) return;
+            
+            const gameCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+            currentGameId = gameCode;
+            
+            const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode);
+            const playerRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode, "players", currentUser.uid);
+
+            const batch = writeBatch(db);
+            batch.set(gameRef, {
+                hostId: currentUser.uid,
+                gameState: 'lobby',
+                currentQuestionIndex: -1,
+                quizId: null,
+                createdAt: serverTimestamp()
+            });
+            batch.set(playerRef, {
+                name: playerName,
+                score: 0,
+                hasAnswered: false,
+            });
+            await batch.commit();
+
+            await attachToGame(gameCode);
+        });
+
+        document.getElementById('join-game-btn').addEventListener('click', async () => {
+            const playerName = getValidPlayerName();
+            const gameCode = document.getElementById('game-code-input').value.trim().toUpperCase();
+
+            if (!playerName || !gameCode || !currentUser) {
+                 document.getElementById('error-message').textContent = 'Nome e código da sala são obrigatórios.';
+                 return;
+            }
+            const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode);
+            const gameDoc = await getDoc(gameRef);
+
+            if (gameDoc.exists() && gameDoc.data().gameState === 'lobby') {
+                currentGameId = gameCode;
+                const playerRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode, "players", currentUser.uid);
+                await setDoc(playerRef, { name: playerName, score: 0, hasAnswered: false, });
+                await attachToGame(gameCode);
+            } else {
+                document.getElementById('error-message').textContent = 'Sala não encontrada ou o jogo já começou.';
+            }
+        });
+
+        async function attachToGame(gameCode) {
+            const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode);
+            const playersRef = collection(db, "artifacts", appId, "public/data/quiz_games", gameCode, "players");
+            
+            unsubscribeGame = onSnapshot(gameRef, (doc) => {
+                currentGameData = doc.data();
+                if (!currentGameData) { resetGame(); return; }
+                updateGameStateUI(currentGameData);
+                checkIfAllAnswered();
+            });
+            
+            unsubscribePlayers = onSnapshot(playersRef, (snapshot) => {
+                currentPlayers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updatePlayersUI(currentPlayers);
+                checkIfAllAnswered();
+            });
+        }
+        
+        function updateGameStateUI(gameData) {
+            switch(gameData.gameState) {
+                case 'lobby':
+                    showScreen(waitingRoomScreen);
+                    document.getElementById('game-code-text').textContent = currentGameId;
+                    if (currentUser.uid === gameData.hostId) {
+                        document.getElementById('host-controls').classList.remove('hidden');
+                        document.getElementById('waiting-for-host').classList.add('hidden');
+                        renderQuizOptions();
+                    } else {
+                        document.getElementById('host-controls').classList.add('hidden');
+                        document.getElementById('waiting-for-host').classList.remove('hidden');
+                    }
+                    break;
+                case 'in-progress':
+                    showScreen(gameScreen);
+                    renderQuestion(gameData);
+                    break;
+                case 'finished':
+                    showScreen(endScreen);
+                    break;
+            }
+        }
+        
+        function checkIfAllAnswered() {
+            const nextButtonControls = document.getElementById('next-question-controls');
+            if (!currentGameData || currentPlayers.length === 0 || currentGameData.gameState !== 'in-progress') {
+                nextButtonControls.classList.add('hidden');
+                return;
+            }
+
+            const allAnswered = currentPlayers.every(p => p.hasAnswered);
+            const isHost = currentUser && currentUser.uid === currentGameData.hostId;
+
+            if (allAnswered && isHost) {
+                nextButtonControls.classList.remove('hidden');
+            } else {
+                nextButtonControls.classList.add('hidden');
+            }
+        }
+
+        function renderQuizOptions() {
+            const container = document.getElementById('quiz-options-container');
+            container.innerHTML = '';
+            Object.keys(quizzes).forEach(quizId => {
+                const quiz = quizzes[quizId];
+                const button = document.createElement('button');
+                button.className = 'btn btn-secondary quiz-option';
+                button.textContent = quiz.name;
+                button.dataset.quizId = quizId;
+                button.onclick = () => {
+                    selectedQuizId = quizId;
+                    document.querySelectorAll('.quiz-option').forEach(btn => btn.classList.remove('selected'));
+                    button.classList.add('selected');
+                    document.getElementById('start-game-btn').disabled = false;
+                };
+                container.appendChild(button);
+            });
+        }
+
+        function updatePlayersUI(players) {
+            const playerList = document.getElementById('player-list');
+            playerList.innerHTML = '';
+            players.forEach(player => {
+                const li = document.createElement('li');
+                li.className = 'bg-indigo-100 text-indigo-800 font-semibold p-3 rounded-lg flex items-center justify-between';
+                li.innerHTML = `${player.name} ${player.hasAnswered ? '✔️' : ''}`;
+                playerList.appendChild(li);
+            });
+
+            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+            const scoreboardList = document.getElementById('scoreboard-list');
+            scoreboardList.innerHTML = '';
+            sortedPlayers.forEach(player => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center p-2 bg-gray-50 rounded-md';
+                li.innerHTML = `<span class="font-medium text-gray-700">${player.name}</span> <span class="font-bold text-indigo-600">${player.score} pontos</span>`;
+                scoreboardList.appendChild(li);
+            });
+             
+            const finalScoreboardList = document.getElementById('final-scoreboard-list');
+            finalScoreboardList.innerHTML = '';
+            sortedPlayers.forEach((player, index) => {
+                const medal = ['🥇', '🥈', '🥉'][index] || '';
+                const li = document.createElement('li');
+                li.className = `text-lg p-3 rounded-lg flex justify-between items-center ${index === 0 ? 'bg-yellow-100' : 'bg-gray-100'}`;
+                li.innerHTML = `<span class="font-semibold">${medal} ${player.name}</span> <span class="font-bold text-gray-800">${player.score} pontos</span>`;
+                finalScoreboardList.appendChild(li);
+            });
+
+            if (sortedPlayers.length > 0) {
+                 document.getElementById('winner-name').textContent = sortedPlayers[0].name;
+            }
+        }
+        
+        function renderQuestion(gameData) {
+            const quiz = quizzes[gameData.quizId];
+            if (!quiz) return;
+            const questionIndex = gameData.currentQuestionIndex;
+            if (questionIndex < 0 || questionIndex >= quiz.questions.length) return;
+            
+            const questionObj = quiz.questions[questionIndex];
+            
+            document.getElementById('quiz-name-display').textContent = quiz.name;
+            document.getElementById('question-number').textContent = questionIndex + 1;
+            document.getElementById('total-questions').textContent = quiz.questions.length;
+            document.getElementById('question-text').textContent = questionObj.question;
+            
+            const answersContainer = document.getElementById('answers-container');
+            answersContainer.innerHTML = '';
+            document.getElementById('feedback-container').innerHTML = '';
+            
+            questionObj.answers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.className = 'btn btn-secondary text-left';
+                button.textContent = answer;
+                button.dataset.index = index;
+                button.onclick = handleAnswerSelection;
+                answersContainer.appendChild(button);
+            });
+        }
+
+        async function handleAnswerSelection(event) {
+            const selectedIndex = parseInt(event.target.dataset.index);
+            const playerRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId, "players", currentUser.uid);
+            
+            // Verifica se o jogador já respondeu para evitar múltiplas submissões
+            const playerDoc = await getDoc(playerRef);
+            if(playerDoc.data().hasAnswered) return;
+
+            await updateDoc(playerRef, { hasAnswered: true });
+
+            const answerButtons = document.querySelectorAll('#answers-container button');
+            answerButtons.forEach(btn => btn.disabled = true);
+            event.target.classList.add('ring-4', 'ring-indigo-500');
+
+            const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId);
+            const gameDoc = await getDoc(gameRef);
+            const gameData = gameDoc.data();
+            const question = quizzes[gameData.quizId].questions[gameData.currentQuestionIndex];
+
+            const feedbackEl = document.getElementById('feedback-container');
+            if (selectedIndex === question.correct) {
+                const currentPlayerData = (await getDoc(playerRef)).data();
+                await updateDoc(playerRef, { score: currentPlayerData.score + 10 });
+                event.target.classList.replace('btn-secondary', 'bg-green-500');
+                event.target.classList.add('text-white');
+                feedbackEl.textContent = 'Resposta Certa! +10 pontos';
+                feedbackEl.className = 'mt-6 text-center text-xl font-bold text-green-600';
+            } else {
+                event.target.classList.replace('btn-secondary', 'bg-red-500');
+                event.target.classList.add('text-white');
+                feedbackEl.textContent = 'Resposta Errada!';
+                feedbackEl.className = 'mt-6 text-center text-xl font-bold text-red-600';
+                answerButtons[question.correct].classList.replace('btn-secondary', 'bg-green-500');
+                answerButtons[question.correct].classList.add('text-white');
+            }
+        }
+
+        document.getElementById('start-game-btn').addEventListener('click', async () => {
+            if (!selectedQuizId) return;
+            const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId);
+            await updateDoc(gameRef, {
+                gameState: 'in-progress',
+                currentQuestionIndex: 0,
+                quizId: selectedQuizId
+            });
+        });
+
+        document.getElementById('next-question-btn').addEventListener('click', async () => {
+            const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId);
+            const gameDoc = await getDoc(gameRef);
+            const gameData = gameDoc.data();
+            const nextIndex = gameData.currentQuestionIndex + 1;
+
+            const playersRef = collection(db, "artifacts", appId, "public/data/quiz_games", currentGameId, "players");
+            const batch = writeBatch(db);
+            const playersSnapshot = await getDocs(playersRef);
+            playersSnapshot.forEach(playerDoc => {
+                batch.update(playerDoc.ref, { hasAnswered: false });
+            });
+
+            const quiz = quizzes[gameData.quizId];
+            if (nextIndex < quiz.questions.length) {
+                batch.update(gameRef, { currentQuestionIndex: nextIndex });
+            } else {
+                batch.update(gameRef, { gameState: 'finished' });
+            }
+            await batch.commit();
+        });
+        
+         document.getElementById('play-again-btn').addEventListener('click', async () => {
+            if (!currentGameId || !currentUser) return;
+            const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId);
+            const gameDoc = await getDoc(gameRef);
+            if (gameDoc.data().hostId !== currentUser.uid) {
+                resetGame();
+                return;
+            }
+            
+            const playersRef = collection(db, "artifacts", appId, "public/data/quiz_games", currentGameId, "players");
+            const playersSnapshot = await getDocs(playersRef);
+            const batch = writeBatch(db);
+
+            batch.update(gameRef, { gameState: 'lobby', currentQuestionIndex: -1, quizId: null });
+            playersSnapshot.forEach(playerDoc => {
+                batch.update(playerDoc.ref, { score: 0, hasAnswered: false });
+            });
+            await batch.commit();
+        });
+        
+        function resetGame() {
+            if (unsubscribeGame) unsubscribeGame();
+            if (unsubscribePlayers) unsubscribePlayers();
+            unsubscribeGame = null;
+            unsubscribePlayers = null;
+            currentGameId = null;
+            selectedQuizId = null;
+            currentPlayers = [];
+            currentGameData = null;
+
+            document.getElementById('game-code-input').value = '';
+            document.getElementById('error-message').textContent = '';
+            document.getElementById('player-name').value = '';
+
+            showScreen(lobbyScreen);
+        }
+
+        document.getElementById('game-code-display').addEventListener('click', () => {
+            const code = document.getElementById('game-code-text').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const display = document.getElementById('game-code-display');
+                const originalContent = display.innerHTML;
+                display.innerHTML = 'Copiado!';
+                setTimeout(() => { display.innerHTML = originalContent; }, 1500);
+            });
+        });
+
+        const scoreboardModal = document.getElementById('scoreboard-modal');
+        document.getElementById('scoreboard-toggle').addEventListener('click', () => scoreboardModal.classList.remove('hidden'));
+        document.getElementById('close-scoreboard-btn').addEventListener('click', () => scoreboardModal.classList.add('hidden'));
+        scoreboardModal.addEventListener('click', (e) => {
+            if (e.target === scoreboardModal) {
+                 scoreboardModal.classList.add('hidden');
+            }
+        });
+
+        window.onload = () => {
+            showScreen(lobbyScreen);
+            setupAuth();
+        };
+
+    </script>
+</body>
+</html>
