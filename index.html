@@ -176,10 +176,15 @@
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, writeBatch, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-quiz-app';
-
-        const app = initializeApp(firebaseConfig);
+       const firebaseConfig = {
+  apiKey: "AIzaSyBu2s6DU9d-hc5HTqSuyYLV6Ut0oOwRIls",
+  authDomain: "quizmultijogador.firebaseapp.com",
+  projectId: "quizmultijogador",
+  storageBucket: "quizmultijogador.firebasestorage.app",
+  messagingSenderId: "245519129065",
+  appId: "1:245519129065:web:95727cf109edad07f29378",
+  measurementId: "G-0BRETH5CW3"
+};
         const auth = getAuth(app);
         const db = getFirestore(app);
         setLogLevel('debug');
