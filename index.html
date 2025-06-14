@@ -18,10 +18,10 @@
             transition: all 0.3s ease;
         }
         .btn {
-            display: inline-flex; /* Changed to inline-flex for alignment */
-            justify-content: space-between; /* To space out text and badge */
-            align-items: center; /* To vertically align text and badge */
-            width: 100%; /* Ensure buttons take full width of their container */
+            display: inline-flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
             font-weight: 600;
             text-align: left;
             user-select: none;
@@ -33,7 +33,7 @@
             transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
         }
         .btn:disabled {
-            opacity: 0.8; /* Slightly less opaque to see results clearly */
+            opacity: 0.8;
             cursor: not-allowed;
         }
         .btn-primary {
@@ -52,6 +52,10 @@
         }
         .btn-secondary:hover:not(:disabled) {
             background-color: #c7d2fe;
+        }
+        .quiz-option {
+            font-size: 0.875rem; /* Smaller font for more options */
+            padding: 0.5rem 1rem;
         }
         .quiz-option.selected {
             background-color: #4f46e5;
@@ -102,7 +106,7 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
-    <div id="app" class="max-w-2xl w-full mx-auto">
+    <div id="app" class="max-w-3xl w-full mx-auto">
         <!-- Tela de Início / Lobby -->
         <div id="lobby-screen" class="card text-center">
             <h1 class="text-4xl font-bold text-gray-800 mb-4">Quiz em Família!</h1>
@@ -138,7 +142,7 @@
             <div id="host-controls" class="hidden mt-8">
                 <div id="host-quiz-selection">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Escolha o Tema do Quiz:</h3>
-                    <div id="quiz-options-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
+                    <div id="quiz-options-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6"></div>
                 </div>
                 <button id="start-game-btn" class="btn btn-primary w-full justify-center" disabled>Começar o Jogo!</button>
             </div>
@@ -222,25 +226,25 @@
                 name: "Conhecimentos Gerais",
                 questions: [
                     { question: "Qual é a capital do Brasil?", answers: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], correct: 2 },
+                    { question: "Quem pintou a Mona Lisa?", answers: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2 },
                     { question: "Qual o maior animal do mundo?", answers: ["Elefante", "Tubarão Baleia", "Baleia Azul", "Girafa"], correct: 2 },
                     { question: "Quem escreveu 'Dom Quixote'?", answers: ["Machado de Assis", "Miguel de Cervantes", "Shakespeare", "Fernando Pessoa"], correct: 1 },
                     { question: "Em que ano o homem pisou na Lua?", answers: ["1969", "1972", "1965", "1980"], correct: 0 },
                     { question: "Qual é o rio mais longo do mundo?", answers: ["Rio Nilo", "Rio Amazonas", "Rio Mississipi", "Rio Yangtzé"], correct: 1 },
-                    { question: "Quem pintou a Mona Lisa?", answers: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2 },
-                    { question: "Qual o plural de 'cidadão'?", answers: ["Cidadãos", "Cidadões", "Cidades", "Cidadãs"], correct: 0 },
                     { question: "Qual a montanha mais alta do mundo?", answers: ["Monte Everest", "K2", "Kangchenjunga", "Lhotse"], correct: 0 },
-                    { question: "Quantos estados tem o Brasil?", answers: ["25 e 1 DF", "26 e 1 DF", "27 e 1 DF", "24 e 1 DF"], correct: 1 },
                     { question: "Qual a fórmula química da água?", answers: ["CO2", "O2", "H2O2", "H2O"], correct: 3 },
                     { question: "Qual país tem o formato de uma bota?", answers: ["Grécia", "Portugal", "Itália", "Espanha"], correct: 2},
                     { question: "Quem foi o inventor da lâmpada?", answers: ["Nikola Tesla", "Thomas Edison", "Graham Bell", "Santos Dumont"], correct: 1},
-                    { question: "Quantos continentes existem?", answers: ["5", "6", "7", "8"], correct: 1},
                     { question: "Qual a capital de Portugal?", answers: ["Madrid", "Porto", "Roma", "Lisboa"], correct: 3},
-                    { question: "Qual o deserto mais quente do mundo?", answers: ["Saara", "Atacama", "Arábia", "Gobi"], correct: 0},
-                    { question: "Qual animal é o símbolo da Austrália?", answers: ["Coala", "Ornitorrinco", "Diabo da Tasmânia", "Canguru"], correct: 3},
                     { question: "Quem descobriu o Brasil?", answers: ["Cristóvão Colombo", "Vasco da Gama", "Pedro Álvares Cabral", "Américo Vespúcio"], correct: 2},
-                    { question: "Qual é a maior floresta tropical do mundo?", answers: ["Floresta do Congo", "Floresta Amazónica", "Floresta de Bornéu", "Floresta da Nova Guiné"], correct: 1},
-                    { question: "Em que país ficam as pirâmides de Gizé?", answers: ["Sudão", "Líbia", "México", "Egito"], correct: 3},
-                    { question: "Qual a moeda oficial do Japão?", answers: ["Yuan", "Won", "Iene", "Rupia"], correct: 2}
+                    { question: "Qual a moeda oficial do Japão?", answers: ["Yuan", "Won", "Iene", "Rupia"], correct: 2},
+                    { question: "Qual o nome do oceano que banha o Brasil?", answers: ["Pacífico", "Índico", "Atlântico", "Ártico"], correct: 2 },
+                    { question: "Qual o deserto mais quente do mundo?", answers: ["Saara", "Atacama", "Arábia", "Gobi"], correct: 0},
+                    { question: "Qual o plural de 'cidadão'?", answers: ["Cidadãos", "Cidadões", "Cidades", "Cidadãs"], correct: 0 },
+                    { question: "Em que continente fica o Egito?", answers: ["Ásia", "Europa", "África", "Oceania"], correct: 2 },
+                    { question: "Qual o coletivo de cães?", answers: ["Manada", "Cardume", "Alcateia", "Rebanho"], correct: 2 },
+                    { question: "Qual o ponto mais alto do Brasil?", answers: ["Pico da Neblina", "Pico 31 de Março", "Monte Roraima", "Pico da Bandeira"], correct: 0 },
+                    { question: "Quantos lados tem um heptágono?", answers: ["5", "6", "7", "8"], correct: 2 }
                 ]
             },
             "ciencia": {
@@ -366,6 +370,156 @@
                     { question: "Qual o nome do código de leis da Babilónia antiga?", answers: ["Código de Hamurabi", "As Doze Tábuas", "As Leis de Manu", "O Livro dos Mortos"], correct: 0},
                     { question: "Qual o nome do movimento liderado por Martinho Lutero no século XVI?", answers: ["A Contrarreforma", "O Iluminismo", "A Reforma Protestante", "O Humanismo"], correct: 2},
                     { question: "Quem foi a figura central do Apartheid na África do Sul?", answers: ["Desmond Tutu", "F. W. de Klerk", "Nelson Mandela", "Thabo Mbeki"], correct: 2}
+                ]
+            },
+            "geografia": {
+                name: "Geografia",
+                questions: [
+                    { question: "Qual é o maior oceano do mundo?", answers: ["Atlântico", "Índico", "Pacífico", "Ártico"], correct: 2 },
+                    { question: "Qual é a capital da Argentina?", answers: ["Santiago", "Montevidéu", "Bogotá", "Buenos Aires"], correct: 3 },
+                    { question: "O Rio Nilo desagua em qual mar?", answers: ["Mar Vermelho", "Mar Mediterrâneo", "Mar Negro", "Mar Cáspio"], correct: 1 },
+                    { question: "Qual é o país mais populoso do mundo?", answers: ["Índia", "Estados Unidos", "Indonésia", "China"], correct: 0 },
+                    { question: "Qual o nome da cordilheira que atravessa a América do Sul?", answers: ["Himalaias", "Andes", "Alpes", "Montanhas Rochosas"], correct: 1 },
+                    { question: "Em que continente se situa a Austrália?", answers: ["Ásia", "América", "África", "Oceânia"], correct: 3 },
+                    { question: "Qual é a capital do Canadá?", answers: ["Toronto", "Vancouver", "Montreal", "Ottawa"], correct: 3 },
+                    { question: "Qual é o maior deserto do mundo (incluindo desertos polares)?", answers: ["Saara", "Deserto da Arábia", "Deserto Antártico", "Gobi"], correct: 2 },
+                    { question: "Qual é o rio que passa por Paris?", answers: ["Tâmisa", "Danúbio", "Sena", "Reno"], correct: 2 },
+                    { question: "Qual o ponto mais baixo de terra firme do planeta?", answers: ["Vale da Morte", "Depressão de Afar", "Mar Morto", "Fossa das Marianas"], correct: 2 },
+                    { question: "Qual o país com a maior área territorial do mundo?", answers: ["Canadá", "China", "Estados Unidos", "Rússia"], correct: 3 },
+                    { question: "Qual é o único país que é também um continente?", answers: ["Gronelândia", "Austrália", "Madagáscar", "Islândia"], correct: 1 },
+                    { question: "Qual a capital do Japão?", answers: ["Quioto", "Osaka", "Hiroshima", "Tóquio"], correct: 3 },
+                    { question: "Qual o nome do estreito que separa a Ásia da América?", answers: ["Estreito de Gibraltar", "Estreito de Bering", "Canal de Suez", "Canal do Panamá"], correct: 1 },
+                    { question: "Qual o país conhecido como 'Terra do Sol Nascente'?", answers: ["China", "Coreia do Sul", "Japão", "Vietname"], correct: 2 },
+                    { question: "Qual a capital da Rússia?", answers: ["São Petersburgo", "Kiev", "Moscovo", "Varsóvia"], correct: 2 },
+                    { question: "Qual a linha imaginária que divide a Terra em hemisfério norte e sul?", answers: ["Trópico de Câncer", "Círculo Polar Ártico", "Linha do Equador", "Meridiano de Greenwich"], correct: 2 },
+                    { question: "Qual o maior lago de água doce do mundo em volume?", answers: ["Lago Superior", "Lago Vitória", "Mar Cáspio", "Lago Baikal"], correct: 3 },
+                    { question: "Em que país se encontra o Monte Fuji?", answers: ["China", "Coreia do Sul", "Japão", "Nepal"], correct: 2 },
+                    { question: "Qual o país mais pequeno do mundo?", answers: ["Mónaco", "Nauru", "São Marino", "Vaticano"], correct: 3 }
+                ]
+            },
+            "corpo_humano": {
+                name: "Corpo Humano",
+                questions: [
+                    { question: "Qual é o maior órgão do corpo humano?", answers: ["Fígado", "Pele", "Cérebro", "Intestino"], correct: 1 },
+                    { question: "Quantos ossos tem um ser humano adulto?", answers: ["206", "212", "198", "250"], correct: 0 },
+                    { question: "Qual o músculo mais forte do corpo humano em proporção ao seu tamanho?", answers: ["Masseter (mandíbula)", "Glúteo", "Quadríceps", "Coração"], correct: 0 },
+                    { question: "Onde se localizam as papilas gustativas?", answers: ["Nariz", "Pele", "Estômago", "Língua"], correct: 3 },
+                    { question: "Qual o nome dos vasos sanguíneos que levam o sangue do coração para o resto do corpo?", answers: ["Veias", "Artérias", "Capilares", "Vênulas"], correct: 1 },
+                    { question: "Qual órgão produz a insulina?", answers: ["Fígado", "Estômago", "Pâncreas", "Rim"], correct: 2 },
+                    { question: "Qual é o nome da substância que dá cor à nossa pele, cabelo e olhos?", answers: ["Queratina", "Colagénio", "Melanina", "Hemoglobina"], correct: 2 },
+                    { question: "Quantos dentes tem um adulto, incluindo os dentes do siso?", answers: ["28", "30", "32", "34"], correct: 2 },
+                    { question: "Qual o nome do osso do crânio que protege o cérebro?", answers: ["Mandíbula", "Maxilar", "Caixa craniana", "Clavícula"], correct: 2 },
+                    { question: "Qual a principal função dos rins?", answers: ["Digestionar alimentos", "Bombear sangue", "Filtrar o sangue", "Produzir hormonas"], correct: 2 },
+                    { question: "Qual o nome do osso popularmente conhecido como 'maçã de Adão'?", answers: ["Hióide", "Cartilagem tiroide", "Epiglote", "Traqueia"], correct: 1 },
+                    { question: "Qual a parte do olho responsável por focar a luz?", answers: ["Íris", "Retina", "Pupila", "Cristalino"], correct: 3 },
+                    { question: "Qual o nome do processo de respiração a nível celular?", answers: ["Fotossíntese", "Respiração celular", "Ventilação", "Hematose"], correct: 1 },
+                    { question: "Quantos litros de sangue tem, em média, um adulto?", answers: ["2-3 litros", "5-6 litros", "8-10 litros", "1-2 litros"], correct: 1 },
+                    { question: "Qual o nome do osso do antebraço do lado do polegar?", answers: ["Ulna", "Fêmur", "Tíbia", "Rádio"], correct: 3 },
+                    { question: "Qual a parte do cérebro responsável pelo equilíbrio e coordenação?", answers: ["Córtex", "Cerebelo", "Tronco cerebral", "Hipocampo"], correct: 1 },
+                    { question: "O que são os alvéolos?", answers: ["Células nervosas", "Ossos do ouvido", "Sacos de ar nos pulmões", "Células musculares"], correct: 2 },
+                    { question: "Qual o nome do ácido presente no estômago?", answers: ["Ácido sulfúrico", "Ácido acético", "Ácido cítrico", "Ácido clorídrico"], correct: 3 },
+                    { question: "Qual a vitamina produzida pelo corpo quando exposto ao sol?", answers: ["Vitamina C", "Vitamina A", "Vitamina D", "Vitamina B12"], correct: 2 },
+                    { question: "Qual o nome do maior osso do corpo humano?", answers: ["Fêmur", "Tíbia", "Úmero", "Pelve"], correct: 0 }
+                ]
+            },
+            "reino_animal": {
+                name: "Reino Animal",
+                questions: [
+                    { question: "Qual é o mamífero mais rápido do mundo?", answers: ["Leão", "Guepardo", "Cavalo", "Antílope"], correct: 1 },
+                    { question: "Qual o único mamífero que pode voar?", answers: ["Esquilo-voador", "Galinha", "Morcego", "Pinguim"], correct: 2 },
+                    { question: "Qual é o maior réptil do mundo?", answers: ["Jacaré-açu", "Crocodilo-de-água-salgada", "Dragão-de-komodo", "Anaconda"], correct: 1 },
+                    { question: "Qual animal tem a maior longevidade?", answers: ["Tartaruga-das-galápagos", "Baleia-da-gronelândia", "Tubarão-da-gronelândia", "Elefante"], correct: 2 },
+                    { question: "Qual pássaro é conhecido pela sua capacidade de imitar a fala humana?", answers: ["Corvo", "Papagaio", "Arara", "Gralha"], correct: 1 },
+                    { question: "Como se chama o macho da abelha?", answers: ["Vespa", "Zangão", "Operário", "Soldado"], correct: 1 },
+                    { question: "Qual destes animais é um marsupial?", answers: ["Coelho", "Urso", "Canguru", "Rato"], correct: 2 },
+                    { question: "Qual é o maior peixe do mundo?", answers: ["Tubarão-baleia", "Tubarão-branco", "Baleia-azul", "Atum"], correct: 0 },
+                    { question: "Qual animal dorme de pé?", answers: ["Cão", "Gato", "Cavalo", "Urso"], correct: 2 },
+                    { question: "De que cor é a pele de um urso polar?", answers: ["Branca", "Amarela", "Cinzenta", "Preta"], correct: 3 },
+                    { question: "Quantos corações tem um polvo?", answers: ["1", "2", "3", "4"], correct: 2 },
+                    { question: "Qual o animal terrestre mais alto do mundo?", answers: ["Elefante", "Camelo", "Girafa", "Alce"], correct: 2 },
+                    { question: "O que é um animal herbívoro?", answers: ["Come carne", "Come plantas", "Come de tudo", "Não come"], correct: 1 },
+                    { question: "Qual o nome do processo de mudança de pele em cobras?", answers: ["Muda", "Hibernação", "Ecdise", "Metamorfose"], correct: 2 },
+                    { question: "Qual o animal que representa o signo de Leão?", answers: ["Tigre", "Lobo", "Urso", "Leão"], correct: 3 },
+                    { question: "Qual é o som que as rãs fazem?", answers: ["Crocitar", "Chiar", "Coaxar", "Grasnar"], correct: 2 },
+                    { question: "Qual destes animais é venenoso?", answers: ["Sapo", "Rã", "Cobra-coral", "Lagartixa"], correct: 2 },
+                    { question: "Qual o nome do filhote de um cavalo?", answers: ["Bezerro", "Poldro", "Cordeiro", "Pinto"], correct: 1 },
+                    { question: "Qual o animal que constrói barragens em rios?", answers: ["Lontra", "Capivara", "Castor", "Rato-do-banhado"], correct: 2 },
+                    { question: "Qual o animal que tem o pescoço mais comprido?", answers: ["Avestruz", "Garça", "Flamingo", "Girafa"], correct: 3 }
+                ]
+            },
+            "comida_bebida": {
+                name: "Comida e Bebida",
+                questions: [
+                    { question: "De que país é originária a pizza?", answers: ["França", "Estados Unidos", "Grécia", "Itália"], correct: 3 },
+                    { question: "Qual é o principal ingrediente do guacamole?", answers: ["Tomate", "Abacate", "Cebola", "Coentros"], correct: 1 },
+                    { question: "Qual é a bebida nacional do Brasil?", answers: ["Cerveja", "Cachaça", "Caipirinha", "Guaraná"], correct: 2 },
+                    { question: "O sushi é um prato típico de que país?", answers: ["China", "Japão", "Coreia do Sul", "Tailândia"], correct: 1 },
+                    { question: "Qual o principal ingrediente do chocolate?", answers: ["Leite", "Açúcar", "Cacau", "Manteiga"], correct: 2 },
+                    { question: "Qual destes queijos não é italiano?", answers: ["Mussarela", "Parmesão", "Gorgonzola", "Roquefort"], correct: 3 },
+                    { question: "A paella é um prato tradicional de que país?", answers: ["Portugal", "Espanha", "México", "Itália"], correct: 1 },
+                    { question: "Qual é a fruta mais consumida no mundo?", answers: ["Banana", "Maçã", "Tomate", "Laranja"], correct: 2 },
+                    { question: "De que é feito o vinho?", answers: ["Maçãs", "Uvas", "Peras", "Morangos"], correct: 1 },
+                    { question: "Qual o nome do pão achatado e redondo usado em kebabs?", answers: ["Baguete", "Pão pita", "Ciabatta", "Focaccia"], correct: 1 },
+                    { question: "Qual a base da sopa japonesa 'ramen'?", answers: ["Arroz", "Massa", "Tofu", "Algas"], correct: 1 },
+                    { question: "Qual o prato mais famoso de Portugal?", answers: ["Francesinha", "Cozido à Portuguesa", "Bacalhau", "Sardinha assada"], correct: 2 },
+                    { question: "Qual o ingrediente principal da feijoada brasileira?", answers: ["Feijão preto", "Feijão branco", "Grão-de-bico", "Lentilhas"], correct: 0 },
+                    { question: "De que país são originários os 'croissants'?", answers: ["França", "Suíça", "Áustria", "Bélgica"], correct: 2 },
+                    { question: "Qual a bebida mais popular do mundo, a seguir à água?", answers: ["Café", "Chá", "Sumo de laranja", "Coca-Cola"], correct: 1 },
+                    { question: "Qual o nome do prato mexicano que consiste numa tortilha enrolada?", answers: ["Taco", "Quesadilla", "Burrito", "Nacho"], correct: 2 },
+                    { question: "Qual o principal ingrediente para fazer pão?", answers: ["Farinha", "Ovos", "Leite", "Manteiga"], correct: 0 },
+                    { question: "Qual o tipo de massa em forma de laço?", answers: ["Penne", "Spaghetti", "Farfalle", "Fusilli"], correct: 2 },
+                    { question: "Qual o principal ingrediente do húmus?", answers: ["Feijão", "Lentilhas", "Grão-de-bico", "Ervilhas"], correct: 2 },
+                    { question: "Qual a bebida destilada feita a partir do agave?", answers: ["Rum", "Vodka", "Gin", "Tequila"], correct: 3 }
+                ]
+            },
+            "marcas": {
+                name: "Marcas Famosas",
+                questions: [
+                    { question: "Qual marca tem o slogan 'Just Do It'?", answers: ["Adidas", "Puma", "Reebok", "Nike"], correct: 3 },
+                    { question: "Qual o nome da empresa de tecnologia fundada por Steve Jobs?", answers: ["Microsoft", "Apple", "Google", "Amazon"], correct: 1 },
+                    { question: "Qual marca de automóveis tem um cavalo empinado como logótipo?", answers: ["Lamborghini", "Porsche", "Ferrari", "Maserati"], correct: 2 },
+                    { question: "Qual o nome da empresa que criou a personagem Mickey Mouse?", answers: ["Warner Bros.", "Universal", "Disney", "Pixar"], correct: 2 },
+                    { question: "Qual a marca de refrigerante mais famosa do mundo?", answers: ["Pepsi", "Coca-Cola", "Sprite", "Fanta"], correct: 1 },
+                    { question: "Qual a empresa de mobiliário sueca conhecida pelas suas lojas enormes?", answers: ["H&M", "Zara Home", "IKEA", "Fnac"], correct: 2 },
+                    { question: "Qual marca de telemóveis produz o 'Galaxy'?", answers: ["Apple", "Huawei", "Xiaomi", "Samsung"], correct: 3 },
+                    { question: "Qual o nome da empresa de streaming com um 'N' vermelho como logótipo?", answers: ["YouTube", "Hulu", "Netflix", "Amazon Prime"], correct: 2 },
+                    { question: "Qual a marca de brinquedos famosa pelos seus blocos de montar?", answers: ["Playmobil", "LEGO", "Mattel", "Hasbro"], correct: 1 },
+                    { question: "Qual a rede social que usa um pássaro azul como logótipo?", answers: ["Facebook", "Instagram", "LinkedIn", "Twitter (X)"], correct: 3 },
+                    { question: "Qual a marca de fast food cujo slogan é 'I'm Lovin' It'?", answers: ["Burger King", "Wendy's", "KFC", "McDonald's"], correct: 3 },
+                    { question: "Qual a marca de carros alemã cujo logótipo tem quatro argolas?", answers: ["BMW", "Mercedes-Benz", "Audi", "Volkswagen"], correct: 2 },
+                    { question: "Qual empresa é dona do motor de busca mais popular do mundo?", answers: ["Microsoft", "Yahoo", "Google", "DuckDuckGo"], correct: 2 },
+                    { question: "Qual marca de café tem uma sereia verde como logótipo?", answers: ["Costa Coffee", "Dunkin' Donuts", "Nespresso", "Starbucks"], correct: 3 },
+                    { question: "Qual o nome da empresa de comércio eletrónico fundada por Jeff Bezos?", answers: ["eBay", "Alibaba", "Amazon", "Shopify"], correct: 2 },
+                    { question: "Qual marca desportiva tem um logótipo com três listras?", answers: ["Puma", "Adidas", "Nike", "Under Armour"], correct: 1 },
+                    { question: "Qual a marca de chocolate conhecida pelo seu formato triangular?", answers: ["Milka", "Lindt", "Cadbury", "Toblerone"], correct: 3 },
+                    { question: "Qual empresa de videojogos criou o 'Super Mario'?", answers: ["Sony", "Microsoft", "Sega", "Nintendo"], correct: 3 },
+                    { question: "Qual o nome da empresa de carros elétricos liderada por Elon Musk?", answers: ["Rivian", "Lucid", "Tesla", "Nio"], correct: 2 },
+                    { question: "Qual a marca de batatas fritas cujo logótipo é um bigode com um laço?", answers: ["Lay's", "Ruffles", "Pringles", "Doritos"], correct: 2 }
+                ]
+            },
+            "2025_acontecimentos": {
+                name: "Acontecimentos de 2025",
+                questions: [
+                    { question: "Qual cidade europeia está programada para ser a Capital Europeia da Cultura em 2025?", answers: ["Lisboa, Portugal", "Chemnitz, Alemanha", "Viena, Áustria", "Atenas, Grécia"], correct: 1 },
+                    { question: "Qual missão da NASA está programada para levar astronautas a orbitar a Lua em 2025?", answers: ["Artemis I", "Artemis II", "Artemis III", "Apollo 18"], correct: 1 },
+                    { question: "Que grande evento desportivo mundial terá lugar no Japão em 2025?", answers: ["Jogos Olímpicos de Verão", "Campeonato do Mundo de Futebol", "Campeonato Mundial de Atletismo", "Campeonato do Mundo de Rugby"], correct: 2 },
+                    { question: "A Expo 2025, uma feira mundial, está programada para acontecer em que cidade japonesa?", answers: ["Tóquio", "Quioto", "Osaka", "Sapporo"], correct: 2 },
+                    { question: "Em 2025, qual grande jubileu a Igreja Católica celebrará em Roma?", answers: ["Jubileu da Esperança", "Jubileu da Fé", "Jubileu da Misericórdia", "Jubileu da Caridade"], correct: 0 },
+                    { question: "Qual país está programado para sediar o Campeonato Europeu de Futebol Feminino da UEFA em 2025?", answers: ["Alemanha", "França", "Suíça", "Inglaterra"], correct: 2 },
+                    { question: "Qual tecnologia emergente espera-se que veja uma adoção ainda mais ampla em smartphones e dispositivos em 2025?", answers: ["5G", "Wi-Fi 7", "Inteligência Artificial Generativa", "Realidade Virtual"], correct: 2 },
+                    { question: "Qual filme de super-heróis do DC Universe está programado para ser lançado em 2025, reiniciando o universo cinematográfico?", answers: ["The Batman Part II", "Joker: Folie à Deux", "Superman", "Wonder Woman 3"], correct: 2 },
+                    { question: "Que ano marcante a Organização das Nações Unidas (ONU) celebra em 2025?", answers: ["50º aniversário", "75º aniversário", "80º aniversário", "100º aniversário"], correct: 2 },
+                    { question: "O Ano Santo Compostelano, um grande evento de peregrinação, será celebrado em que ano, incluindo 2025?", answers: ["Apenas em 2025", "2021 e 2022", "2027", "Não se aplica"], correct: 1 },
+                    { question: "Qual será a principal tendência na indústria automobilística em 2025?", answers: ["Carros a diesel", "Expansão de carros elétricos", "Carros a hidrogénio", "Carros voadores"], correct: 1 },
+                    { question: "A sonda espacial 'Europa Clipper' da NASA está programada para ser lançada em direção a que lua de Júpiter?", answers: ["Ganimedes", "Calisto", "Io", "Europa"], correct: 3 },
+                    { question: "Qual é o nome da próxima grande atualização do sistema operativo Windows esperada para 2025?", answers: ["Windows 12", "Windows 11 Update", "Windows Neptune", "Ainda não anunciado"], correct: 0 },
+                    { question: "Que país sediará o Campeonato Mundial de Natação em 2025?", answers: ["Austrália", "Rússia", "Singapura", "Estados Unidos"], correct: 2 },
+                    { question: "Qual o nome do telescópio espacial que sucederá o Hubble e o James Webb, com lançamento previsto para a década de 2020?", answers: ["Nancy Grace Roman", "Kepler", "Spitzer", "TESS"], correct: 0 },
+                    { question: "A cidade do Rio de Janeiro foi nomeada Capital Mundial de quê para 2025 pela UNESCO?", answers: ["Capital Mundial do Livro", "Capital Mundial da Arquitetura", "Capital Mundial da Música", "Capital Mundial do Desporto"], correct: 1 },
+                    { question: "Qual será o foco principal das discussões sobre mudanças climáticas na COP30 em Belém, Brasil?", answers: ["Redução de plástico", "Financiamento climático", "Energia nuclear", "Agricultura sustentável"], correct: 1 },
+                    { question: "Que banda famosa anunciou uma turné de despedida que passará pela Europa em 2025?", answers: ["The Rolling Stones", "Aerosmith", "U2", "Coldplay"], correct: 1 },
+                    { question: "O que se espera que a inteligência artificial seja capaz de fazer de forma mais autónoma em 2025?", answers: ["Conduzir carros em todas as condições", "Diagnosticar doenças com precisão", "Escrever romances completos", "Gerar código de programação complexo"], correct: 3 },
+                    { question: "Qual a data prevista para a conclusão da Basílica da Sagrada Família em Barcelona?", answers: ["2026", "2030", "2035", "Ainda sem data"], correct: 0 }
                 ]
             }
         };
@@ -635,8 +789,6 @@
             const answerButtons = document.querySelectorAll('#answers-container button');
             answerButtons.forEach(btn => btn.disabled = true);
             button.classList.add('ring-4', 'ring-indigo-500');
-
-            // Wait for all players to answer to reveal correct answer and scores
         }
 
         function showVoteCounts() {
@@ -655,23 +807,27 @@
                 });
 
                 answerButtons.forEach((button, index) => {
+                    // Prevent adding multiple badges
+                    if (button.querySelector('.vote-count-badge')) {
+                        return;
+                    }
+
                     const badge = document.createElement('span');
                     badge.className = 'vote-count-badge bg-gray-300 text-gray-700';
                     badge.textContent = voteCounts[index];
                     button.appendChild(badge);
                     
-                    // Reveal correct/incorrect status for everyone
                     if (index === question.correct) {
                         button.classList.remove('btn-secondary', 'ring-indigo-500');
                         button.classList.add('bg-green-500', 'text-white');
                         badge.classList.remove('bg-gray-300', 'text-gray-700');
                         badge.classList.add('bg-green-700', 'text-white');
-                    } else if (button.classList.contains('ring-4')) { // Player's own wrong answer
+                    } else if (button.classList.contains('ring-4')) {
                          button.classList.remove('btn-secondary', 'ring-indigo-500');
                          button.classList.add('bg-red-500', 'text-white');
                          badge.classList.remove('bg-gray-300', 'text-gray-700');
                          badge.classList.add('bg-red-700', 'text-white');
-                    } else { // Other wrong answers
+                    } else {
                          button.classList.add('opacity-60');
                     }
                 });
@@ -681,6 +837,12 @@
                 if (myPlayer && myPlayer.selectedAnswer === question.correct) {
                      feedbackEl.textContent = 'Resposta Certa! +10 pontos';
                      feedbackEl.className = 'mt-6 text-center text-xl font-bold text-green-600';
+                     if(!gameData.scores || !gameData.scores[myPlayer.id]) {
+                        const playerRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId, "players", currentUser.uid);
+                        getDoc(playerRef).then(playerDoc => {
+                            updateDoc(playerRef, {score: playerDoc.data().score + 10});
+                        });
+                     }
                 } else {
                      feedbackEl.textContent = 'Resposta Errada!';
                      feedbackEl.className = 'mt-6 text-center text-xl font-bold text-red-600';
