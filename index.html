@@ -523,6 +523,11 @@
             }
 
             const allAnswered = currentPlayers.every(p => p.hasAnswered);
+            
+            if (allAnswered) {
+                showVoteCounts();
+            }
+
             const isHost = currentUser && currentUser.uid === currentGameData.hostId;
 
             if (allAnswered && isHost) {
@@ -631,28 +636,58 @@
             answerButtons.forEach(btn => btn.disabled = true);
             button.classList.add('ring-4', 'ring-indigo-500');
 
-            const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId);
-            const gameDoc = await getDoc(gameRef);
-            const gameData = gameDoc.data();
-            const question = quizzes[gameData.quizId].questions[gameData.currentQuestionIndex];
-
-            const feedbackEl = document.getElementById('feedback-container');
-            if (selectedIndex === question.correct) {
-                const currentPlayerData = (await getDoc(playerRef)).data();
-                await updateDoc(playerRef, { score: currentPlayerData.score + 10 });
-                button.classList.remove('btn-secondary', 'ring-indigo-500');
-                button.classList.add('bg-green-500', 'text-white');
-                feedbackEl.textContent = 'Resposta Certa! +10 pontos';
-                feedbackEl.className = 'mt-6 text-center text-xl font-bold text-green-600';
-            } else {
-                button.classList.remove('btn-secondary', 'ring-indigo-500');
-                button.classList.add('bg-red-500', 'text-white');
-                feedbackEl.textContent = 'Resposta Errada!';
-                feedbackEl.className = 'mt-6 text-center text-xl font-bold text-red-600';
-                answerButtons[question.correct].classList.remove('btn-secondary');
-                answerButtons[question.correct].classList.add('bg-green-500', 'text-white');
-            }
+            // Wait for all players to answer to reveal correct answer and scores
         }
+
+        function showVoteCounts() {
+            const answerButtons = document.querySelectorAll('#answers-container button');
+            const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId);
+            
+            getDoc(gameRef).then(gameDoc => {
+                const gameData = gameDoc.data();
+                const question = quizzes[gameData.quizId].questions[gameData.currentQuestionIndex];
+                
+                const voteCounts = [0, 0, 0, 0];
+                currentPlayers.forEach(p => {
+                    if (p.selectedAnswer !== null && p.selectedAnswer !== undefined) {
+                        voteCounts[p.selectedAnswer]++;
+                    }
+                });
+
+                answerButtons.forEach((button, index) => {
+                    const badge = document.createElement('span');
+                    badge.className = 'vote-count-badge bg-gray-300 text-gray-700';
+                    badge.textContent = voteCounts[index];
+                    button.appendChild(badge);
+                    
+                    // Reveal correct/incorrect status for everyone
+                    if (index === question.correct) {
+                        button.classList.remove('btn-secondary', 'ring-indigo-500');
+                        button.classList.add('bg-green-500', 'text-white');
+                        badge.classList.remove('bg-gray-300', 'text-gray-700');
+                        badge.classList.add('bg-green-700', 'text-white');
+                    } else if (button.classList.contains('ring-4')) { // Player's own wrong answer
+                         button.classList.remove('btn-secondary', 'ring-indigo-500');
+                         button.classList.add('bg-red-500', 'text-white');
+                         badge.classList.remove('bg-gray-300', 'text-gray-700');
+                         badge.classList.add('bg-red-700', 'text-white');
+                    } else { // Other wrong answers
+                         button.classList.add('opacity-60');
+                    }
+                });
+
+                const myPlayer = currentPlayers.find(p => p.id === currentUser.uid);
+                const feedbackEl = document.getElementById('feedback-container');
+                if (myPlayer && myPlayer.selectedAnswer === question.correct) {
+                     feedbackEl.textContent = 'Resposta Certa! +10 pontos';
+                     feedbackEl.className = 'mt-6 text-center text-xl font-bold text-green-600';
+                } else {
+                     feedbackEl.textContent = 'Resposta Errada!';
+                     feedbackEl.className = 'mt-6 text-center text-xl font-bold text-red-600';
+                }
+            });
+        }
+
 
         document.getElementById('start-game-btn').addEventListener('click', async () => {
             if (!selectedQuizId) return;
