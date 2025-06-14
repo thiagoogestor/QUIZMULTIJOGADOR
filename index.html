@@ -103,9 +103,14 @@
             font-size: 0.75rem;
             font-weight: 700;
         }
-        .flag-emoji {
-            font-size: 4rem;
-            line-height: 1;
+        /* Flag image styling */
+        .flag-image {
+            height: 6rem; /* 96px */
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 1rem; /* 16px */
+            border-radius: 0.375rem; /* rounded-md */
+            border: 1px solid #e5e7eb; /* border-gray-200 */
         }
     </style>
 </head>
@@ -164,7 +169,7 @@
                 <div id="scoreboard-toggle" class="cursor-pointer font-semibold text-indigo-600 hover:underline">Ver Pontuação</div>
             </div>
             <div id="question-container" class="mb-6">
-                <p id="question-text" class="text-2xl font-semibold text-gray-800 text-center"></p>
+                <!-- O conteúdo da pergunta (texto e/ou imagem) será inserido aqui -->
             </div>
             <div id="answers-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             <div id="feedback-container" class="mt-6 text-center text-xl font-bold"></div>
@@ -530,76 +535,76 @@
             "bandeiras_facil": {
                 name: "Bandeiras (Fácil)",
                 questions: [
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇧🇷</span>?", answers: ["Portugal", "Argentina", "Brasil", "Cabo Verde"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇺🇸</span>?", answers: ["Reino Unido", "Estados Unidos", "Libéria", "Malásia"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇵🇹</span>?", answers: ["Espanha", "Brasil", "Portugal", "Angola"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇯🇵</span>?", answers: ["China", "Japão", "Coreia do Sul", "Vietname"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇨🇦</span>?", answers: ["Estados Unidos", "Austrália", "Canadá", "Peru"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇮🇹</span>?", answers: ["México", "Irlanda", "Hungria", "Itália"], correct: 3 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇩🇪</span>?", answers: ["Bélgica", "Áustria", "Alemanha", "Luxemburgo"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇫🇷</span>?", answers: ["Países Baixos", "Rússia", "França", "Luxemburgo"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇬🇧</span>?", answers: ["Austrália", "Reino Unido", "Nova Zelândia", "Islândia"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇪🇸</span>?", answers: ["Portugal", "Espanha", "Andorra", "Mónaco"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇦🇷</span>?", answers: ["Uruguai", "Paraguai", "Argentina", "Honduras"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇨🇳</span>?", answers: ["Vietname", "China", "Turquia", "Marrocos"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>�🇷</span>?", answers: ["Japão", "Coreia do Norte", "Coreia do Sul", "Taiwan"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇦🇺</span>?", answers: ["Nova Zelândia", "Reino Unido", "Fiji", "Austrália"], correct: 3 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇲🇽</span>?", answers: ["Itália", "México", "Honduras", "Espanha"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇷🇺</span>?", answers: ["Eslovénia", "Sérvia", "Eslováquia", "Rússia"], correct: 3 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇮🇳</span>?", answers: ["Paquistão", "Índia", "Bangladesh", "Irlanda"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇿🇦</span>?", answers: ["Sudão do Sul", "Etiópia", "África do Sul", "Zimbábue"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇨🇭</span>?", answers: ["Dinamarca", "Suíça", "Suécia", "Áustria"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇬🇷</span>?", answers: ["Chipre", "Finlândia", "Israel", "Grécia"], correct: 3 }
+                    { question: "A que país pertence esta bandeira?", flagCode: 'br', answers: ["Portugal", "Argentina", "Brasil", "Cabo Verde"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'us', answers: ["Reino Unido", "Estados Unidos", "Libéria", "Malásia"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'pt', answers: ["Espanha", "Brasil", "Portugal", "Angola"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'jp', answers: ["China", "Japão", "Coreia do Sul", "Vietname"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'ca', answers: ["Estados Unidos", "Austrália", "Canadá", "Peru"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'it', answers: ["México", "Irlanda", "Hungria", "Itália"], correct: 3 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'de', answers: ["Bélgica", "Áustria", "Alemanha", "Luxemburgo"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'fr', answers: ["Países Baixos", "Rússia", "França", "Luxemburgo"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'gb', answers: ["Austrália", "Reino Unido", "Nova Zelândia", "Islândia"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'es', answers: ["Portugal", "Espanha", "Andorra", "Mónaco"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'ar', answers: ["Uruguai", "Paraguai", "Argentina", "Honduras"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'cn', answers: ["Vietname", "China", "Turquia", "Marrocos"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'kr', answers: ["Japão", "Coreia do Norte", "Coreia do Sul", "Taiwan"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'au', answers: ["Nova Zelândia", "Reino Unido", "Fiji", "Austrália"], correct: 3 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'mx', answers: ["Itália", "México", "Honduras", "Espanha"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'ru', answers: ["Eslovénia", "Sérvia", "Eslováquia", "Rússia"], correct: 3 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'in', answers: ["Paquistão", "Índia", "Bangladesh", "Irlanda"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'za', answers: ["Sudão do Sul", "Etiópia", "África do Sul", "Zimbábue"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'ch', answers: ["Dinamarca", "Suíça", "Suécia", "Áustria"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'gr', answers: ["Chipre", "Finlândia", "Israel", "Grécia"], correct: 3 }
                 ]
             },
             "bandeiras_medio": {
                 name: "Bandeiras (Médio)",
                 questions: [
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇸🇪</span>?", answers: ["Dinamarca", "Noruega", "Suécia", "Finlândia"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇳🇴</span>?", answers: ["Islândia", "Noruega", "Dinamarca", "Finlândia"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇳🇱</span>?", answers: ["Luxemburgo", "França", "Países Baixos", "Rússia"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇮🇪</span>?", answers: ["Itália", "Costa do Marfim", "Irlanda", "Índia"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇨🇱</span>?", answers: ["Texas (EUA)", "Porto Rico", "Chile", "Cuba"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇨🇴</span>?", answers: ["Equador", "Venezuela", "Colômbia", "Roménia"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇪🇬</span>?", answers: ["Síria", "Iémen", "Egito", "Iraque"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇹🇷</span>?", answers: ["Tunísia", "Turquia", "Azerbaijão", "Paquistão"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇮🇱</span>?", answers: ["Grécia", "Israel", "Argentina", "Somália"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇯🇲</span>?", answers: ["Gana", "África do Sul", "Jamaica", "Brasil"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇨🇺</span>?", answers: ["República Dominicana", "Porto Rico", "Filipinas", "Cuba"], correct: 3 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇺🇦</span>?", answers: ["Suécia", "Colômbia", "Ucrânia", "Palau"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇵🇱</span>?", answers: ["Indonésia", "Mónaco", "Polónia", "Áustria"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇻🇳</span>?", answers: ["China", "Vietname", "Marrocos", "Somália"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇹🇭</span>?", answers: ["Costa Rica", "Malásia", "Tailândia", "Camboja"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇦🇹</span>?", answers: ["Polónia", "Áustria", "Letónia", "Peru"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇵🇰</span>?", answers: ["Arábia Saudita", "Irão", "Paquistão", "Argélia"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇲🇾</span>?", answers: ["Estados Unidos", "Libéria", "Malásia", "Uruguai"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇰🇪</span>?", answers: ["Quénia", "Uganda", "Sudão do Sul", "Etiópia"], correct: 0 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇭🇺</span>?", answers: ["Bulgária", "Itália", "Irão", "Hungria"], correct: 3 }
+                    { question: "A que país pertence esta bandeira?", flagCode: 'se', answers: ["Dinamarca", "Noruega", "Suécia", "Finlândia"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'no', answers: ["Islândia", "Noruega", "Dinamarca", "Finlândia"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'nl', answers: ["Luxemburgo", "França", "Países Baixos", "Rússia"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'ie', answers: ["Itália", "Costa do Marfim", "Irlanda", "Índia"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'cl', answers: ["Texas (EUA)", "Porto Rico", "Chile", "Cuba"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'co', answers: ["Equador", "Venezuela", "Colômbia", "Roménia"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'eg', answers: ["Síria", "Iémen", "Egito", "Iraque"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'tr', answers: ["Tunísia", "Turquia", "Azerbaijão", "Paquistão"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'il', answers: ["Grécia", "Israel", "Argentina", "Somália"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'jm', answers: ["Gana", "África do Sul", "Jamaica", "Brasil"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'cu', answers: ["República Dominicana", "Porto Rico", "Filipinas", "Cuba"], correct: 3 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'ua', answers: ["Suécia", "Colômbia", "Ucrânia", "Palau"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'pl', answers: ["Indonésia", "Mónaco", "Polónia", "Áustria"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'vn', answers: ["China", "Vietname", "Marrocos", "Somália"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'th', answers: ["Costa Rica", "Malásia", "Tailândia", "Camboja"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'at', answers: ["Polónia", "Áustria", "Letónia", "Peru"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'pk', answers: ["Arábia Saudita", "Irão", "Paquistão", "Argélia"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'my', answers: ["Estados Unidos", "Libéria", "Malásia", "Uruguai"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'ke', answers: ["Quénia", "Uganda", "Sudão do Sul", "Etiópia"], correct: 0 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'hu', answers: ["Bulgária", "Itália", "Irão", "Hungria"], correct: 3 }
                 ]
             },
             "bandeiras_dificil": {
                 name: "Bandeiras (Difícil)",
                 questions: [
-                    { question: "Esta é a bandeira da Roménia ou do Chade? <span class='flag-emoji'>🇷🇴</span>", answers: ["Roménia", "Chade", "Ambos", "Nenhum"], correct: 0 },
-                    { question: "Esta é a bandeira da Indonésia ou do Mónaco? <span class='flag-emoji'>🇮🇩</span>", answers: ["Indonésia", "Mónaco", "Ambos", "Nenhum"], correct: 0 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇸🇮</span>?", answers: ["Rússia", "Eslováquia", "Sérvia", "Eslovénia"], correct: 3 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇨🇮</span>?", answers: ["Irlanda", "Costa do Marfim", "Níger", "Itália"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇳🇵</span>?", answers: ["Índia", "Butão", "Nepal", "Tibete"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇧🇹</span>?", answers: ["País de Gales", "Butão", "Malta", "Albânia"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇸🇨</span>?", answers: ["Comores", "Maurícia", "Seychelles", "Maldivas"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇧🇧</span>?", answers: ["Trindade e Tobago", "Barbados", "Santa Lúcia", "Bahamas"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇨🇾</span>?", answers: ["Creta", "Malta", "Chipre", "Kosovo"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇲🇿</span>?", answers: ["Angola", "Moçambique", "Zimbábue", "Timor-Leste"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇧🇿</span>?", answers: ["Guatemala", "Honduras", "Belize", "El Salvador"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇱🇰</span>?", answers: ["Índia", "Sri Lanka", "Bangladesh", "Nepal"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇰🇿</span>?", answers: ["Uzbequistão", "Turquemenistão", "Quirguistão", "Cazaquistão"], correct: 3 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇱🇺</span>?", answers: ["Países Baixos", "Paraguai", "Luxemburgo", "Croácia"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇪🇪</span>?", answers: ["Finlândia", "Letónia", "Lituânia", "Estónia"], correct: 3 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇻🇦</span>?", answers: ["San Marino", "Vaticano", "Malta", "Andorra"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇵🇬</span>?", answers: ["Ilhas Salomão", "Vanuatu", "Papua-Nova Guiné", "Fiji"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇰🇬</span>?", answers: ["Cazaquistão", "Quirguistão", "Tajiquistão", "Mongólia"], correct: 1 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇱🇻</span>?", answers: ["Áustria", "Polónia", "Letónia", "Líbano"], correct: 2 },
-                    { question: "Que país tem esta bandeira: <span class='flag-emoji'>🇲🇱</span>?", answers: ["Senegal", "Guiné", "Mali", "Camarões"], correct: 2 }
+                    { question: "A que país pertence esta bandeira (tem uma faixa azul ligeiramente mais escura)?", flagCode: 'ro', answers: ["Roménia", "Chade", "Andorra", "Moldávia"], correct: 0 },
+                    { question: "A que país pertence esta bandeira (é mais comprida que a do Mónaco)?", flagCode: 'id', answers: ["Indonésia", "Mónaco", "Polónia", "Singapura"], correct: 0 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'si', answers: ["Rússia", "Eslováquia", "Sérvia", "Eslovénia"], correct: 3 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'ci', answers: ["Irlanda", "Costa do Marfim", "Níger", "Itália"], correct: 1 },
+                    { question: "A que país pertence esta bandeira (a única não retangular do mundo)?", flagCode: 'np', answers: ["Índia", "Butão", "Nepal", "Tibete"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'bt', answers: ["País de Gales", "Butão", "Malta", "Albânia"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'sc', answers: ["Comores", "Maurícia", "Seychelles", "Maldivas"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'bb', answers: ["Trindade e Tobago", "Barbados", "Santa Lúcia", "Bahamas"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'cy', answers: ["Creta", "Malta", "Chipre", "Kosovo"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'mz', answers: ["Angola", "Moçambique", "Zimbábue", "Timor-Leste"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'bz', answers: ["Guatemala", "Honduras", "Belize", "El Salvador"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'lk', answers: ["Índia", "Sri Lanka", "Bangladesh", "Nepal"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'kz', answers: ["Uzbequistão", "Turquemenistão", "Quirguistão", "Cazaquistão"], correct: 3 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'lu', answers: ["Países Baixos", "Paraguai", "Luxemburgo", "Croácia"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'ee', answers: ["Finlândia", "Letónia", "Lituânia", "Estónia"], correct: 3 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'va', answers: ["San Marino", "Vaticano", "Malta", "Andorra"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'pg', answers: ["Ilhas Salomão", "Vanuatu", "Papua-Nova Guiné", "Fiji"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'kg', answers: ["Cazaquistão", "Quirguistão", "Tajiquistão", "Mongólia"], correct: 1 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'lv', answers: ["Áustria", "Polónia", "Letónia", "Líbano"], correct: 2 },
+                    { question: "A que país pertence esta bandeira?", flagCode: 'ml', answers: ["Senegal", "Guiné", "Mali", "Camarões"], correct: 2 }
                 ]
             }
         };
@@ -846,8 +851,25 @@
             document.getElementById('question-number').textContent = questionIndex + 1;
             document.getElementById('total-questions').textContent = quiz.questions.length;
             
-            const questionTextContainer = document.getElementById('question-text');
-            questionTextContainer.innerHTML = questionObj.question;
+            const questionContainer = document.getElementById('question-container');
+            questionContainer.innerHTML = ''; // Limpa conteúdo anterior
+
+            if (questionObj.flagCode) {
+                const flagImage = document.createElement('img');
+                flagImage.src = `https://flagcdn.com/w160/${questionObj.flagCode}.png`;
+                flagImage.alt = 'Bandeira do país';
+                flagImage.className = 'flag-image';
+                flagImage.onerror = () => { 
+                    flagImage.src = `https://placehold.co/160x107/eee/ccc?text=Bandeira`; 
+                    flagImage.alt = 'Erro ao carregar bandeira';
+                };
+                questionContainer.appendChild(flagImage);
+            }
+
+            const questionText = document.createElement('p');
+            questionText.className = 'text-2xl font-semibold text-gray-800 text-center';
+            questionText.textContent = questionObj.question;
+            questionContainer.appendChild(questionText);
             
             const answersContainer = document.getElementById('answers-container');
             answersContainer.innerHTML = '';
@@ -1049,4 +1071,3 @@
     </script>
 </body>
 </html>
-�
