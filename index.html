@@ -784,7 +784,19 @@
             const playerDoc = await getDoc(playerRef);
             if(playerDoc.data().hasAnswered) return;
 
-            await updateDoc(playerRef, { hasAnswered: true, selectedAnswer: selectedIndex });
+            // FIX: Score is calculated and written in the same atomic operation
+            const gameDoc = await getDoc(doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId));
+            const question = quizzes[gameDoc.data().quizId].questions[gameDoc.data().currentQuestionIndex];
+            
+            const updates = {
+                hasAnswered: true,
+                selectedAnswer: selectedIndex
+            };
+            if(selectedIndex === question.correct) {
+                updates.score = playerDoc.data().score + 10;
+            }
+
+            await updateDoc(playerRef, updates);
 
             const answerButtons = document.querySelectorAll('#answers-container button');
             answerButtons.forEach(btn => btn.disabled = true);
@@ -792,6 +804,12 @@
         }
 
         function showVoteCounts() {
+            // FIX: Add guard to prevent running on new questions before answers are in
+            const allHaveSelected = currentPlayers.every(p => p.selectedAnswer !== null && p.selectedAnswer !== undefined);
+            if (!allHaveSelected) {
+                return;
+            }
+
             const answerButtons = document.querySelectorAll('#answers-container button');
             const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId);
             
@@ -807,10 +825,7 @@
                 });
 
                 answerButtons.forEach((button, index) => {
-                    // Prevent adding multiple badges
-                    if (button.querySelector('.vote-count-badge')) {
-                        return;
-                    }
+                    if (button.querySelector('.vote-count-badge')) return;
 
                     const badge = document.createElement('span');
                     badge.className = 'vote-count-badge bg-gray-300 text-gray-700';
@@ -837,12 +852,6 @@
                 if (myPlayer && myPlayer.selectedAnswer === question.correct) {
                      feedbackEl.textContent = 'Resposta Certa! +10 pontos';
                      feedbackEl.className = 'mt-6 text-center text-xl font-bold text-green-600';
-                     if(!gameData.scores || !gameData.scores[myPlayer.id]) {
-                        const playerRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId, "players", currentUser.uid);
-                        getDoc(playerRef).then(playerDoc => {
-                            updateDoc(playerRef, {score: playerDoc.data().score + 10});
-                        });
-                     }
                 } else {
                      feedbackEl.textContent = 'Resposta Errada!';
                      feedbackEl.className = 'mt-6 text-center text-xl font-bold text-red-600';
