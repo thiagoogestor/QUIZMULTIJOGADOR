@@ -176,15 +176,23 @@
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, writeBatch, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-       const firebaseConfig = {
-  apiKey: "AIzaSyBu2s6DU9d-hc5HTqSuyYLV6Ut0oOwRIls",
-  authDomain: "quizmultijogador.firebaseapp.com",
-  projectId: "quizmultijogador",
-  storageBucket: "quizmultijogador.firebasestorage.app",
-  messagingSenderId: "245519129065",
-  appId: "1:245519129065:web:95727cf109edad07f29378",
-  measurementId: "G-0BRETH5CW3"
-};
+        // =================================================================
+        //  PASSO IMPORTANTE: COLE A SUA CONFIGURAÇÃO DO FIREBASE AQUI
+        //  (Encontre isto nas "Configurações do projeto" do seu Firebase)
+        // =================================================================
+        const firebaseConfig = {
+            // apiKey: "AIza...",
+            // authDomain: "quizmultijogador.firebaseapp.com",
+            // projectId: "quizmultijogador",
+            // storageBucket: "quizmultijogador.appspot.com",
+            // messagingSenderId: "...",
+            // appId: "..."
+        };
+        // =================================================================
+
+        // O resto do código
+        const appId = 'default-quiz-app'; // Usado para a estrutura da base de dados
+        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         setLogLevel('debug');
@@ -197,7 +205,6 @@
         let currentPlayers = [];
         let currentGameData = null;
         
-        // BANCO DE PERGUNTAS
         const quizzes = {
             "geral": {
                 name: "Conhecimentos Gerais",
@@ -291,14 +298,16 @@
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     currentUser = user;
-                    document.getElementById('user-id-display').textContent = user.uid;
+                    document.getElementById('user-id-display').textContent = user.uid.substring(0, 8);
                 } else {
                     signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed", error));
                 }
             });
-             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+             if (auth.currentUser) {
+                currentUser = auth.currentUser;
+             } else if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token).catch(err => signInAnonymously(auth));
-            } else if (!auth.currentUser) {
+            } else {
                 await signInAnonymously(auth);
             }
         }
@@ -318,6 +327,10 @@
         }
 
         document.getElementById('create-game-btn').addEventListener('click', async () => {
+            if (!firebaseConfig.apiKey) {
+                document.getElementById('error-message').textContent = 'A configuração do Firebase está em falta. Edite o ficheiro HTML.';
+                return;
+            }
             const playerName = getValidPlayerName();
             if (!playerName || !currentUser) return;
             
@@ -346,6 +359,10 @@
         });
 
         document.getElementById('join-game-btn').addEventListener('click', async () => {
+            if (!firebaseConfig.apiKey) {
+                document.getElementById('error-message').textContent = 'A configuração do Firebase está em falta. Fale com o criador da sala.';
+                return;
+            }
             const playerName = getValidPlayerName();
             const gameCode = document.getElementById('game-code-input').value.trim().toUpperCase();
 
@@ -375,12 +392,17 @@
                 if (!currentGameData) { resetGame(); return; }
                 updateGameStateUI(currentGameData);
                 checkIfAllAnswered();
+            }, error => {
+                console.error("Erro no listener do jogo: ", error);
+                document.getElementById('error-message').textContent = 'Erro ao ligar à sala. Verifique a sua ligação.';
             });
             
             unsubscribePlayers = onSnapshot(playersRef, (snapshot) => {
                 currentPlayers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 updatePlayersUI(currentPlayers);
                 checkIfAllAnswered();
+            }, error => {
+                console.error("Erro no listener dos jogadores: ", error);
             });
         }
         
@@ -510,7 +532,6 @@
             const selectedIndex = parseInt(event.target.dataset.index);
             const playerRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId, "players", currentUser.uid);
             
-            // Verifica se o jogador já respondeu para evitar múltiplas submissões
             const playerDoc = await getDoc(playerRef);
             if(playerDoc.data().hasAnswered) return;
 
