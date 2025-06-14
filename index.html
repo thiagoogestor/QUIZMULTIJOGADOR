@@ -172,27 +172,25 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, writeBatch, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // =================================================================
         //  PASSO IMPORTANTE: COLE A SUA CONFIGURAÇÃO DO FIREBASE AQUI
-        //  (Encontre isto nas "Configurações do projeto" do seu Firebase)
         // =================================================================
         const firebaseConfig = {
-           apiKey: "AIzaSyBu2s6DU9d-hc5HTqSuyYLV6Ut0oOwRIls",
-  authDomain: "quizmultijogador.firebaseapp.com",
-  projectId: "quizmultijogador",
-  storageBucket: "quizmultijogador.firebasestorage.app",
-  messagingSenderId: "245519129065",
-  appId: "1:245519129065:web:95727cf109edad07f29378",
-  measurementId: "G-0BRETH5CW3"
+            apiKey: "AIzaSyBu2s6DU9d-hc5HTqSuyYLV6Ut0oOwRIls",
+            authDomain: "quizmultijogador.firebaseapp.com",
+            projectId: "quizmultijogador",
+            storageBucket: "quizmultijogador.appspot.com",
+            messagingSenderId: "245519129065",
+            appId: "1:245519129065:web:95727cf109edad07f29378",
+            measurementId: "G-0BRETH5CW3"
         };
         // =================================================================
 
-        // O resto do código
-        const appId = 'default-quiz-app'; // Usado para a estrutura da base de dados
+        const appId = 'default-quiz-app';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -211,75 +209,150 @@
                 name: "Conhecimentos Gerais",
                 questions: [
                     { question: "Qual é a capital do Brasil?", answers: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], correct: 2 },
-                    { question: "Quantos planetas existem no sistema solar?", answers: ["7", "8", "9", "10"], correct: 1 },
                     { question: "Qual o maior animal do mundo?", answers: ["Elefante", "Tubarão Baleia", "Baleia Azul", "Girafa"], correct: 2 },
                     { question: "Quem escreveu 'Dom Quixote'?", answers: ["Machado de Assis", "Miguel de Cervantes", "Shakespeare", "Fernando Pessoa"], correct: 1 },
-                    { question: "Qual país ganhou a primeira Copa do Mundo?", answers: ["Brasil", "Argentina", "Itália", "Uruguai"], correct: 3 },
-                    { question: "Em que ano o homem pisou na Lua pela primeira vez?", answers: ["1969", "1972", "1965", "1980"], correct: 0 },
+                    { question: "Em que ano o homem pisou na Lua?", answers: ["1969", "1972", "1965", "1980"], correct: 0 },
                     { question: "Qual é o rio mais longo do mundo?", answers: ["Rio Nilo", "Rio Amazonas", "Rio Mississipi", "Rio Yangtzé"], correct: 1 },
                     { question: "Quem pintou a Mona Lisa?", answers: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2 },
-                    { question: "Qual é o metal mais precioso?", answers: ["Prata", "Ouro", "Platina", "Ródio"], correct: 3 },
-                    { question: "Quantos lados tem um hexágono?", answers: ["5", "6", "7", "8"], correct: 1 },
-                    { question: "Qual o nome do oceano que banha o Brasil?", answers: ["Pacífico", "Índico", "Atlântico", "Ártico"], correct: 2 },
-                    { question: "Qual a montanha mais alta do mundo?", answers: ["Monte Everest", "K2", "Kangchenjunga", "Lhotse"], correct: 0 },
-                    { question: "Qual desses países não faz fronteira com o Brasil?", answers: ["Argentina", "Colômbia", "Chile", "Uruguai"], correct: 2 },
-                    { question: "Quantos estados tem o Brasil?", answers: ["25 e 1 DF", "26 e 1 DF", "27 e 1 DF", "24 e 1 DF"], correct: 1 },
-                    { question: "Qual o prato típico mais famoso da Bahia?", answers: ["Feijoada", "Moqueca", "Vatapá", "Acarajé"], correct: 3 },
-                    { question: "Qual o significado da sigla 'PIB'?", answers: ["Produto Interno Bruto", "Preço Ideal de Bens", "Padrão Industrial Básico", "Plano de Importação Brasileiro"], correct: 0 },
-                    { question: "Em que continente fica o Egito?", answers: ["Ásia", "Europa", "África", "Oceania"], correct: 2 },
                     { question: "Qual o plural de 'cidadão'?", answers: ["Cidadãos", "Cidadões", "Cidades", "Cidadãs"], correct: 0 },
-                    { question: "Quem foi o primeiro presidente do Brasil?", answers: ["Dom Pedro II", "Getúlio Vargas", "Deodoro da Fonseca", "Prudente de Morais"], correct: 2 },
+                    { question: "Qual a montanha mais alta do mundo?", answers: ["Monte Everest", "K2", "Kangchenjunga", "Lhotse"], correct: 0 },
+                    { question: "Quantos estados tem o Brasil?", answers: ["25 e 1 DF", "26 e 1 DF", "27 e 1 DF", "24 e 1 DF"], correct: 1 },
                     { question: "Qual a fórmula química da água?", answers: ["CO2", "O2", "H2O2", "H2O"], correct: 3 },
+                    { question: "Qual país tem o formato de uma bota?", answers: ["Grécia", "Portugal", "Itália", "Espanha"], correct: 2},
+                    { question: "Quem foi o inventor da lâmpada?", answers: ["Nikola Tesla", "Thomas Edison", "Graham Bell", "Santos Dumont"], correct: 1},
+                    { question: "Quantos continentes existem?", answers: ["5", "6", "7", "8"], correct: 1},
+                    { question: "Qual a capital de Portugal?", answers: ["Madrid", "Porto", "Roma", "Lisboa"], correct: 3},
+                    { question: "Qual o deserto mais quente do mundo?", answers: ["Saara", "Atacama", "Arábia", "Gobi"], correct: 0},
+                    { question: "Qual animal é o símbolo da Austrália?", answers: ["Coala", "Ornitorrinco", "Diabo da Tasmânia", "Canguru"], correct: 3},
+                    { question: "Quem descobriu o Brasil?", answers: ["Cristóvão Colombo", "Vasco da Gama", "Pedro Álvares Cabral", "Américo Vespúcio"], correct: 2},
+                    { question: "Qual é a maior floresta tropical do mundo?", answers: ["Floresta do Congo", "Floresta Amazónica", "Floresta de Bornéu", "Floresta da Nova Guiné"], correct: 1},
+                    { question: "Em que país ficam as pirâmides de Gizé?", answers: ["Sudão", "Líbia", "México", "Egito"], correct: 3},
+                    { question: "Qual a moeda oficial do Japão?", answers: ["Yuan", "Won", "Iene", "Rupia"], correct: 2}
                 ]
             },
             "ciencia": {
                 name: "Ciência e Tecnologia",
                 questions: [
-                    { question: "Qual elemento químico tem o símbolo 'O'?", answers: ["Ouro", "Oxigênio", "Ósmio", "Hélio"], correct: 1 },
-                    { question: "Qual a velocidade da luz no vácuo?", answers: ["300.000 km/h", "300.000 km/s", "150.000 km/s", "Infinita"], correct: 1 },
-                    { question: "Quem é considerado o pai da computação?", answers: ["Alan Turing", "Bill Gates", "Steve Jobs", "Tim Berners-Lee"], correct: 0 },
-                    { question: "O que mede um sismógrafo?", answers: ["Ventos", "Marés", "Temperatura", "Terremotos"], correct: 3 },
                     { question: "Qual planeta é conhecido como 'Planeta Vermelho'?", answers: ["Vênus", "Marte", "Júpiter", "Saturno"], correct: 1 },
-                    { question: "Qual o nome do processo que as plantas usam para se alimentar?", answers: ["Respiração", "Transpiração", "Fotossíntese", "Digestão"], correct: 2 },
+                    { question: "Qual o gás mais abundante na atmosfera terrestre?", answers: ["Oxigénio", "Dióxido de Carbono", "Hidrogénio", "Nitrogénio"], correct: 3 },
                     { question: "Quem desenvolveu a teoria da relatividade?", answers: ["Isaac Newton", "Galileu Galilei", "Albert Einstein", "Nikola Tesla"], correct: 2 },
                     { question: "Qual o primeiro animal a ser clonado?", answers: ["Cachorro", "Gato", "Ovelha", "Vaca"], correct: 2 },
-                    { question: "Qual o gás mais abundante na atmosfera terrestre?", answers: ["Oxigênio", "Dióxido de Carbono", "Hidrogênio", "Nitrogênio"], correct: 3 },
-                    { question: "Qual a função dos glóbulos brancos?", answers: ["Transportar oxigênio", "Defender o corpo", "Coagular o sangue", "Produzir hormônios"], correct: 1 },
+                    { question: "O que mede um sismógrafo?", answers: ["Ventos", "Marés", "Temperatura", "Terremotos"], correct: 3 },
+                    { question: "Qual o nome do processo que as plantas usam para se alimentar?", answers: ["Respiração", "Transpiração", "Fotossíntese", "Digestão"], correct: 2 },
+                    { question: "Qual a função dos glóbulos brancos?", answers: ["Transportar oxigénio", "Defender o corpo", "Coagular o sangue", "Produzir hormonas"], correct: 1 },
                     { question: "O que é um 'byte'?", answers: ["Unidade de som", "Unidade de cor", "Unidade de informação digital", "Unidade de velocidade"], correct: 2 },
-                    { question: "Qual a camada mais externa da Terra?", answers: ["Manto", "Núcleo", "Crosta", "Atmosfera"], correct: 2 },
-                    { question: "Qual desses não é um sistema operacional?", answers: ["Windows", "Linux", "Microsoft Office", "Android"], correct: 2 },
-                    { question: "Qual o nome da galáxia em que vivemos?", answers: ["Andrômeda", "Via Láctea", "Triângulo", "Sombrero"], correct: 1 },
+                    { question: "Qual desses não é um sistema operativo?", answers: ["Windows", "Linux", "Microsoft Office", "Android"], correct: 2 },
                     { question: "Quem inventou o telefone?", answers: ["Thomas Edison", "Nikola Tesla", "Santos Dumont", "Alexander Graham Bell"], correct: 3 },
                     { question: "Qual o osso mais longo do corpo humano?", answers: ["Tíbia", "Fêmur", "Úmero", "Rádio"], correct: 1 },
                     { question: "O que é a 'penicilina'?", answers: ["Um vírus", "Uma bactéria", "Um analgésico", "Um antibiótico"], correct: 3 },
                     { question: "Qual o nome do primeiro satélite artificial lançado ao espaço?", answers: ["Apollo 11", "Explorer 1", "Sputnik 1", "Vostok 1"], correct: 2 },
-                    { question: "Qual animal hiberna durante o inverno?", answers: ["Leão", "Girafa", "Urso", "Pinguim"], correct: 2 },
                     { question: "De que é feito o vidro?", answers: ["Plástico derretido", "Argila aquecida", "Areia de sílica", "Metal líquido"], correct: 2 },
+                    { question: "O que significa a sigla 'DNA'?", answers: ["Ácido desoxirribonucleico", "Ácido ribonucleico", "Densidade nuclear atómica", "Digital new age"], correct: 0},
+                    { question: "Qual a velocidade do som no ar?", answers: ["Aprox. 343 m/s", "Aprox. 1235 m/s", "Aprox. 3000 m/s", "É instantânea"], correct: 0},
+                    { question: "Qual elemento químico tem o símbolo 'Fe'?", answers: ["Flúor", "Hélio", "Ferro", "Fósforo"], correct: 2},
+                    { question: "Quem é considerado o 'pai da computação'?", answers: ["Bill Gates", "Alan Turing", "Steve Jobs", "Tim Berners-Lee"], correct: 1},
+                    { question: "O que estuda a entomologia?", answers: ["Rochas", "Pássaros", "Insetos", "Peixes"], correct: 2},
+                    { question: "Qual o nome da nossa galáxia?", answers: ["Andrómeda", "Via Láctea", "Centaurus A", "Galáxia do Triângulo"], correct: 1}
                 ]
             },
             "artes": {
                 name: "Artes e Entretenimento",
                 questions: [
-                    { question: "Quem dirigiu o filme 'Titanic' de 1997?", answers: ["Steven Spielberg", "George Lucas", "James Cameron", "Quentin Tarantino"], correct: 2 },
                     { question: "Qual banda de rock é conhecida como 'The Fab Four'?", answers: ["The Rolling Stones", "The Beatles", "Queen", "Led Zeppelin"], correct: 1 },
-                    { question: "Qual destes atores ganhou um Oscar por 'O Regresso'?", answers: ["Brad Pitt", "Johnny Depp", "Leonardo DiCaprio", "Tom Hanks"], correct: 2 },
                     { question: "Quem escreveu a saga 'Harry Potter'?", answers: ["J. R. R. Tolkien", "J. K. Rowling", "George R. R. Martin", "C. S. Lewis"], correct: 1 },
                     { question: "Qual o nome do vocalista da banda Queen?", answers: ["Freddie Mercury", "Elton John", "David Bowie", "Mick Jagger"], correct: 0 },
-                    { question: "Qual o nome do parque temático do filme 'Jurassic Park'?", answers: ["Ilha Nublar", "Ilha Sorna", "Terra da Fantasia", "Mundo Perdido"], correct: 0 },
                     { question: "Qual destes pintores é famoso por cortar a própria orelha?", answers: ["Pablo Picasso", "Claude Monet", "Salvador Dalí", "Vincent van Gogh"], correct: 3 },
-                    { question: "Qual é o nome do personagem principal de 'O Poderoso Chefão'?", answers: ["Michael Corleone", "Tony Montana", "Sonny Corleone", "Vito Corleone"], correct: 3 },
-                    { question: "Qual instrumento musical era a especialidade de Louis Armstrong?", answers: ["Saxofone", "Piano", "Trompete", "Bateria"], correct: 2 },
                     { question: "Qual filme ganhou o primeiro Oscar de Melhor Animação?", answers: ["A Bela e a Fera", "O Rei Leão", "Toy Story", "Shrek"], correct: 3 },
-                    { question: "Qual o nome do robô amigo de Luke Skywalker em 'Star Wars'?", answers: ["C-3PO", "BB-8", "R2-D2", "Chewbacca"], correct: 2 },
                     { question: "Quem é o autor da famosa peça 'Romeu e Julieta'?", answers: ["Machado de Assis", "Charles Dickens", "William Shakespeare", "Dante Alighieri"], correct: 2 },
                     { question: "Qual série de TV se passa em Westeros?", answers: ["The Witcher", "Game of Thrones", "Vikings", "The Last Kingdom"], correct: 1 },
                     { question: "Qual cantor é conhecido como o 'Rei do Pop'?", answers: ["Elvis Presley", "James Brown", "Michael Jackson", "Prince"], correct: 2 },
                     { question: "De qual país o tango é uma dança tradicional?", answers: ["Espanha", "Brasil", "México", "Argentina"], correct: 3 },
                     { question: "Qual o nome do bruxo que é o principal vilão em Harry Potter?", answers: ["Dumbledore", "Snape", "Voldemort", "Sirius Black"], correct: 2 },
-                    { question: "Quem canta a música 'Bohemian Rhapsody'?", answers: ["Pink Floyd", "The Doors", "U2", "Queen"], correct: 3 },
-                    { question: "Qual o nome do primeiro filme da Marvel Cinematic Universe (MCU)?", answers: ["O Incrível Hulk", "Homem de Ferro", "Capitão América", "Thor"], correct: 1 },
-                    { question: "Qual artista é conhecido por suas obras de 'action painting'?", answers: ["Andy Warhol", "Jackson Pollock", "Roy Lichtenstein", "Keith Haring"], correct: 1 },
-                    { question: "Qual o nome do protagonista da série 'Breaking Bad'?", answers: ["Jesse Pinkman", "Saul Goodman", "Gus Fring", "Walter White"], correct: 3 }
+                    { question: "Quem dirigiu 'Pulp Fiction'?", answers: ["Steven Spielberg", "Martin Scorsese", "Quentin Tarantino", "James Cameron"], correct: 2},
+                    { question: "Qual destes não é um membro dos Vingadores originais do cinema?", answers: ["Capitão América", "Homem-Formiga", "Viúva Negra", "Hulk"], correct: 1},
+                    { question: "Quem canta a música 'Like a Virgin'?", answers: ["Whitney Houston", "Cyndi Lauper", "Mariah Carey", "Madonna"], correct: 3},
+                    { question: "Qual o nome do boneco de madeira que queria ser um menino de verdade?", answers: ["Gepeto", "Grilo Falante", "Pinóquio", "Figaro"], correct: 2},
+                    { question: "Em que cidade se passa a série 'La Casa de Papel'?", answers: ["Barcelona", "Madrid", "Lisboa", "Rio de Janeiro"], correct: 1},
+                    { question: "Qual o nome do leão protagonista de 'O Rei Leão'?", answers: ["Mufasa", "Scar", "Simba", "Timão"], correct: 2},
+                    { question: "Que artista é conhecido pela obra 'O Grito'?", answers: ["Edvard Munch", "Salvador Dalí", "Frida Kahlo", "Claude Monet"], correct: 0},
+                    { question: "Qual o nome do carro de 'Regresso ao Futuro'?", answers: ["Ford Mustang", "Ferrari 250 GTO", "Pontiac Trans Am", "DeLorean"], correct: 3},
+                    { question: "Qual o nome da personagem principal da saga 'Jogos da Fome'?", answers: ["Primrose Everdeen", "Katniss Everdeen", "Gale Hawthorne", "Peeta Mellark"], correct: 1},
+                    { question: "Quem compôs 'As Quatro Estações'?", answers: ["Bach", "Mozart", "Beethoven", "Vivaldi"], correct: 3}
+                ]
+            },
+            "filmes": {
+                name: "Filmes e Séries",
+                questions: [
+                    { question: "Qual filme apresenta a frase 'Que a Força esteja com você'?", answers: ["Star Trek", "Star Wars", "Blade Runner", "Duna"], correct: 1 },
+                    { question: "Na série 'Breaking Bad', qual é o pseudónimo de Walter White?", answers: ["Cap'n Cook", "Jesse", "Gus", "Heisenberg"], correct: 3 },
+                    { question: "Qual o nome da inteligência artificial no filme '2001: Uma Odisseia no Espaço'?", answers: ["J.A.R.V.I.S.", "Skynet", "HAL 9000", "GLaDOS"], correct: 2 },
+                    { question: "Quem é o realizador da trilogia 'O Cavaleiro das Trevas'?", answers: ["Tim Burton", "Zack Snyder", "J.J. Abrams", "Christopher Nolan"], correct: 3 },
+                    { question: "Qual o nome do navio em 'Piratas das Caraíbas' comandado por Jack Sparrow?", answers: ["O Vingança da Rainha Ana", "O Holandês Voador", "O Pérola Negra", "O Interceptor"], correct: 2 },
+                    { question: "Em 'Friends', qual o nome do café onde o grupo se encontra?", answers: ["The Coffee Shop", "Central Perk", "Monk's Café", "The Grind"], correct: 1 },
+                    { question: "Que ator interpreta o Homem de Ferro no Universo Cinematográfico Marvel?", answers: ["Chris Evans", "Chris Hemsworth", "Mark Ruffalo", "Robert Downey Jr."], correct: 3 },
+                    { question: "Qual o nome do protagonista da série 'The Office' (versão EUA)?", answers: ["Dwight Schrute", "Jim Halpert", "Michael Scott", "Andy Bernard"], correct: 2 },
+                    { question: "Qual o primeiro filme a cores a ganhar o Oscar de Melhor Filme?", answers: ["O Feiticeiro de Oz", "E Tudo o Vento Levou", "Serenata à Chuva", "Branca de Neve"], correct: 1 },
+                    { question: "Qual o nome do mundo fantástico da série 'A Guerra dos Tronos'?", answers: ["Terra Média", "Nárnia", "Westeros", "Alagaësia"], correct: 2 },
+                    { question: "Qual o nome do tubarão no filme de Steven Spielberg de 1975?", answers: ["Jaws", "Bruce", "Deep Blue", "Moby Dick"], correct: 1},
+                    { question: "Na série 'Stranger Things', qual o nome do mundo invertido?", answers: ["The Underneath", "The Abyss", "The Upside Down", "The Nether"], correct: 2},
+                    { question: "Qual destes filmes não foi realizado por Martin Scorsese?", answers: ["Taxi Driver", "O Poderoso Chefão", "Touro Enraivecido", "Os Bons Companheiros"], correct: 1},
+                    { question: "Qual a cor do sabre de luz de Luke Skywalker em 'O Regresso de Jedi'?", answers: ["Azul", "Vermelho", "Roxo", "Verde"], correct: 3},
+                    { question: "Qual o nome da personagem de Keanu Reeves em 'Matrix'?", answers: ["Morpheus", "Cypher", "Neo", "Agente Smith"], correct: 2},
+                    { question: "Qual o nome da casa de Hogwarts a que Harry Potter pertence?", answers: ["Slytherin", "Hufflepuff", "Gryffindor", "Ravenclaw"], correct: 2},
+                    { question: "Qual o nome do palhaço assassino no filme 'It'?", answers: ["Coringa", "Pennywise", "Krusty", "Bozo"], correct: 1},
+                    { question: "Quem interpreta a personagem 'Eleven' na série 'Stranger Things'?", answers: ["Sadie Sink", "Millie Bobby Brown", "Maya Hawke", "Natalia Dyer"], correct: 1},
+                    { question: "Qual o nome do império do mal em 'Star Wars'?", answers: ["A Primeira Ordem", "A Aliança Rebelde", "O Império Galáctico", "A República"], correct: 2},
+                    { question: "Em que filme a personagem diz 'Eu vejo gente morta'?", answers: ["O Exorcista", "O Iluminado", "Poltergeist", "O Sexto Sentido"], correct: 3}
+                ]
+            },
+            "desporto": {
+                name: "Desporto",
+                questions: [
+                    { question: "Quantos jogadores tem uma equipa de basquetebol em campo?", answers: ["5", "6", "7", "11"], correct: 0 },
+                    { question: "Qual país venceu o primeiro Campeonato do Mundo de Futebol?", answers: ["Brasil", "Argentina", "Itália", "Uruguai"], correct: 3 },
+                    { question: "Em que desporto se usa um 'puck'?", answers: ["Basebol", "Críquete", "Pólo Aquático", "Hóquei no Gelo"], correct: 3 },
+                    { question: "Quem é o maior medalhista olímpico de todos os tempos?", answers: ["Usain Bolt", "Carl Lewis", "Larisa Latynina", "Michael Phelps"], correct: 3 },
+                    { question: "Qual o nome do famoso estádio de futebol em Londres?", answers: ["Old Trafford", "Anfield", "Wembley", "Stamford Bridge"], correct: 2 },
+                    { question: "Qual o nome do torneio de ténis mais antigo do mundo?", answers: ["Roland Garros", "US Open", "Australian Open", "Wimbledon"], correct: 3 },
+                    { question: "Quantos pontos vale um 'touchdown' no futebol americano?", answers: ["3", "6", "7", "2"], correct: 1 },
+                    { question: "Qual o país de origem do piloto de Fórmula 1, Ayrton Senna?", answers: ["Argentina", "Itália", "Alemanha", "Brasil"], correct: 3 },
+                    { question: "Em que arte marcial se usa um 'judogi'?", answers: ["Karaté", "Taekwondo", "Judo", "Kung Fu"], correct: 2 },
+                    { question: "Qual é a corrida de ciclismo mais famosa do mundo?", answers: ["Giro d'Italia", "Vuelta a España", "Tour de France", "Paris-Roubaix"], correct: 2 },
+                    { question: "Qual jogador de futebol é conhecido como 'O Rei'?", answers: ["Maradona", "Messi", "Pelé", "Cristiano Ronaldo"], correct: 2},
+                    { question: "Quantas casas tem um tabuleiro de xadrez?", answers: ["32", "64", "100", "48"], correct: 1},
+                    { question: "Qual o nome da bola usada no basebol?", answers: ["A bola não tem nome", "Slugger", "Rawlings", "É só 'bola de basebol'"], correct: 3},
+                    { question: "Qual a duração de uma maratona oficial?", answers: ["42.195 metros", "42.195 km", "40 km", "21 km"], correct: 1},
+                    { question: "Qual equipa da NBA tem mais títulos?", answers: ["Chicago Bulls", "Golden State Warriors", "Los Angeles Lakers", "Boston Celtics"], correct: 2},
+                    { question: "Onde foram realizados os primeiros Jogos Olímpicos da era moderna?", answers: ["Paris", "Atenas", "Londres", "Roma"], correct: 1},
+                    { question: "Qual o nome do golpe final no voleibol?", answers: ["Manchete", "Serviço", "Bloqueio", "Remate"], correct: 3},
+                    { question: "Qual o surfista com mais títulos mundiais?", answers: ["Gabriel Medina", "Kelly Slater", "Mick Fanning", "Andy Irons"], correct: 1},
+                    { question: "Qual a pontuação máxima numa partida de bowling?", answers: ["100", "150", "200", "300"], correct: 3},
+                    { question: "Em que desporto se compete na 'corrida das 500 milhas de Indianápolis'?", answers: ["NASCAR", "Fórmula 1", "Motociclismo", "IndyCar Series"], correct: 3}
+                ]
+            },
+            "historia": {
+                name: "História do Mundo",
+                questions: [
+                    { question: "Em que ano começou a Primeira Guerra Mundial?", answers: ["1912", "1914", "1916", "1918"], correct: 1 },
+                    { question: "Quem foi o primeiro imperador de Roma?", answers: ["Júlio César", "Nero", "Augusto", "Calígula"], correct: 2 },
+                    { question: "Qual civilização antiga construiu Machu Picchu?", answers: ["Astecas", "Maias", "Incas", "Egípcios"], correct: 2 },
+                    { question: "A Queda do Muro de Berlim ocorreu em que ano?", answers: ["1985", "1987", "1989", "1991"], correct: 2 },
+                    { question: "Quem foi o líder da Revolução Cubana?", answers: ["Che Guevara", "Fulgencio Batista", "Fidel Castro", "Camilo Cienfuegos"], correct: 2 },
+                    { question: "Qual o nome do navio em que Charles Darwin viajou?", answers: ["HMS Victory", "HMS Endeavour", "HMS Beagle", "HMS Discovery"], correct: 2 },
+                    { question: "Qual o nome da famosa rainha do Egito que se aliou a Roma?", answers: ["Nefertiti", "Hatshepsut", "Cleópatra", "Nefertari"], correct: 2 },
+                    { question: "Em que país começou a Renascença?", answers: ["França", "Espanha", "Portugal", "Itália"], correct: 3 },
+                    { question: "Quem era o presidente dos EUA durante a Guerra Civil Americana?", answers: ["Thomas Jefferson", "Andrew Jackson", "Abraham Lincoln", "Ulysses S. Grant"], correct: 2 },
+                    { question: "Qual o nome da doença que causou a 'Peste Negra' na Europa?", answers: ["Varíola", "Tuberculose", "Peste Bubónica", "Cólera"], correct: 2 },
+                    { question: "Qual o nome da última rainha da França?", answers: ["Catarina de Médici", "Joana d'Arc", "Maria Antonieta", "Isabel I"], correct: 2},
+                    { question: "Em que ano terminou a Segunda Guerra Mundial?", answers: ["1943", "1944", "1945", "1946"], correct: 2},
+                    { question: "Qual império foi governado por Gengis Khan?", answers: ["Império Romano", "Império Mongol", "Império Otomano", "Império Persa"], correct: 1},
+                    { question: "Qual a cidade que foi soterrada pela erupção do vulcão Vesúvio em 79 d.C.?", answers: ["Roma", "Florença", "Atenas", "Pompeia"], correct: 3},
+                    { question: "Quem proferiu a famosa frase 'Eu tenho um sonho'?", answers: ["Nelson Mandela", "Malcolm X", "Martin Luther King Jr.", "Barack Obama"], correct: 2},
+                    { question: "A 'Guerra dos Cem Anos' foi travada entre que países?", answers: ["Inglaterra e Espanha", "França e Alemanha", "Inglaterra e França", "Espanha e Portugal"], correct: 2},
+                    { question: "Qual o nome da primeira mulher a voar para o espaço?", answers: ["Sally Ride", "Valentina Tereshkova", "Svetlana Savitskaya", "Mae Jemison"], correct: 1},
+                    { question: "Qual o nome do código de leis da Babilónia antiga?", answers: ["Código de Hamurabi", "As Doze Tábuas", "As Leis de Manu", "O Livro dos Mortos"], correct: 0},
+                    { question: "Qual o nome do movimento liderado por Martinho Lutero no século XVI?", answers: ["A Contrarreforma", "O Iluminismo", "A Reforma Protestante", "O Humanismo"], correct: 2},
+                    { question: "Quem foi a figura central do Apartheid na África do Sul?", answers: ["Desmond Tutu", "F. W. de Klerk", "Nelson Mandela", "Thabo Mbeki"], correct: 2}
                 ]
             }
         };
@@ -306,9 +379,7 @@
             });
              if (auth.currentUser) {
                 currentUser = auth.currentUser;
-             } else if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token).catch(err => signInAnonymously(auth));
-            } else {
+             } else {
                 await signInAnonymously(auth);
             }
         }
