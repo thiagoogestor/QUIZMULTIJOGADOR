@@ -139,7 +139,7 @@
     <div id="app" class="max-w-3xl w-full mx-auto">
         <!-- Tela de Início / Lobby -->
         <div id="lobby-screen" class="card text-center">
-            <h1 class="text-4xl font-bold text-gray-800 mb-4">Inter Quest !</h1>
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Inter Quiz !</h1>
             <p class="text-gray-600 mb-8">Crie uma sala ou junte-se a uma existente para começar a diversão.</p>
             <div class="space-y-4">
                 <input type="text" id="player-name" class="input-field text-center" placeholder="Digite seu nome">
@@ -188,16 +188,18 @@
 
         <!-- Tela do Jogo -->
         <div id="game-screen" class="hidden card">
-            <button class="go-to-menu-btn" title="Sair do Jogo">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            </button>
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <div class="text-sm font-medium text-gray-500" id="quiz-name-display"></div>
-                    <div class="text-lg font-bold text-indigo-600">Pergunta <span id="question-number"></span>/<span id="total-questions"></span></div>
-                </div>
-                <div id="scoreboard-toggle" class="cursor-pointer font-semibold text-indigo-600 hover:underline">Ver Pontuação</div>
-            </div>
+           <div class="flex justify-between items-center mb-4">
+    <div>
+        <div class="text-sm font-medium text-gray-500" id="quiz-name-display"></div>
+        <div class="text-lg font-bold text-indigo-600">Pergunta <span id="question-number"></span>/<span id="total-questions"></span></div>
+    </div>
+    <div class="flex items-center space-x-4">
+        <div id="scoreboard-toggle" class="cursor-pointer font-semibold text-indigo-600 hover:underline">Ver Pontuação</div>
+        <button class="go-to-menu-btn" title="Voltar para a Sala">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </button>
+    </div>
+</div>
             <div id="question-container" class="mb-6"></div>
             <div id="answers-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             <div id="feedback-container" class="mt-6 text-center text-xl font-bold"></div>
