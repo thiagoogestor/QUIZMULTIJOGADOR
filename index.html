@@ -858,7 +858,21 @@
             screens.forEach(screen => screen.classList.add('hidden'));
             screenToShow.classList.remove('hidden');
         }
+function showQuizStartScreen() {
+  const quizTitleEl = document.getElementById('quiz-title');
+  if (quizTitleEl && quizzes[selectedQuizId]) {
+    quizTitleEl.textContent = quizzes[selectedQuizId].name;
+  }
 
+  const startBtn = document.getElementById('btn-iniciar-quiz');
+  if (startBtn) {
+    startBtn.onclick = () => {
+      startGame();
+    };
+  }
+
+  showScreen(document.getElementById('quiz-start-screen'));
+}
 async function setupAuth() {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -1091,19 +1105,10 @@ async function renderQuizOptions() {
     `;
     button.dataset.quizId = quizId;
 
-    button.onclick = () => {
-        selectedQuizId = quizId;
-
-        // Atualiza o título do quiz na tela seguinte (opcional)
-        const titleEl = document.getElementById('quiz-title');
-        if (titleEl) titleEl.textContent = quiz.name;
-
-        // Alterna a tela automaticamente
-        showScreen(document.getElementById('waiting-room-screen'));
-
-        // Opcional: Se quiser começar o jogo direto, use isso em vez da linha acima:
-        // startGame();
-    };
+button.onclick = () => {
+  selectedQuizId = quizId;
+  showQuizStartScreen();
+};
 
     container.appendChild(button);
 });
