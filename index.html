@@ -123,8 +123,9 @@
             <p class="text-gray-600 mb-8">Crie uma sala ou junte-se a uma existente para começar a diversão.</p>
 
             <div class="space-y-4">
-                <input type="text" id="player-name" class="input-field text-center" placeholder="Digite seu nome">
-                <button id="create-game-btn" class="btn btn-primary w-full justify-center">Criar Novo Jogo</button>
+                <button id="google-login-btn" class="btn btn-secondary w-full justify-center">Entrar com Google</button>
+    <input type="text" id="player-name" class="input-field text-center" placeholder="Digite seu nome">
+    <button id="create-game-btn" class="btn btn-primary w-full justify-center">Criar Novo Jogo</button>
                 <div class="flex items-center my-4">
                     <hr class="flex-grow border-t border-gray-300">
                     <span class="px-4 text-gray-500 font-semibold">OU</span>
@@ -851,21 +852,37 @@
             screenToShow.classList.remove('hidden');
         }
 
-        async function setupAuth() {
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    currentUser = user;
-                    document.getElementById('user-id-display').textContent = user.uid.substring(0, 8);
-                } else {
-                    signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed", error));
-                }
-            });
-             if (auth.currentUser) {
-                currentUser = auth.currentUser;
-             } else {
-                await signInAnonymously(auth);
-            }
+import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+async function setupAuth() {
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('user-id-display').textContent = user.displayName || user.email || user.uid.substring(0, 8);
         }
+    });
+
+    const loginBtn = document.getElementById('google-login-btn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                const result = await signInWithPopup(auth, provider);
+                currentUser = result.user;
+                document.getElementById('user-id-display').textContent = result.user.displayName || result.user.email;
+                alert("Login com Google realizado com sucesso!");
+            } catch (error) {
+                console.error("Erro no login com Google:", error);
+                alert("Erro ao fazer login com Google.");
+            }
+            if (currentUser && currentUser.displayName) {
+    document.getElementById('player-name').value = currentUser.displayName;
+    document.getElementById('player-name').disabled = true;
+}
+        });
+    }
+}
+
         
         function getValidPlayerName() {
             const playerName = document.getElementById('player-name').value.trim();
