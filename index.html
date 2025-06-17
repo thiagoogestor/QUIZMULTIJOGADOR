@@ -1073,29 +1073,34 @@ async function renderQuizOptions() {
         }
     }
 
-    Object.keys(quizzes).forEach((quizId, index) => {
-        const quiz = quizzes[quizId];
-        const recorde = recordes[quizId] || 0;
+   Object.keys(quizzes).forEach((quizId, index) => {
+    const quiz = quizzes[quizId];
+    const recorde = recordes[quizId] || 0;
 
-        const button = document.createElement('button');
-        button.className = 'btn btn-secondary quiz-option flex justify-between items-center';
-        button.innerHTML = `
-            <span class="mr-3">${index + 1}. ${quiz.name}</span>
-            <span class="text-xs text-indigo-600 font-semibold">🏆 ${recorde} pts</span>
-        `;
-        button.dataset.quizId = quizId;
+    const button = document.createElement('button');
+    button.className = 'btn btn-secondary quiz-option flex justify-between items-center';
+    button.innerHTML = `
+        <span class="mr-3">${index + 1}. ${quiz.name}</span>
+        <span class="text-xs text-indigo-600 font-semibold">🏆 ${recorde} pts</span>
+    `;
+    button.dataset.quizId = quizId;
 
-        button.onclick = () => {
-            selectedQuizId = quizId;
-            document.querySelectorAll('.quiz-option').forEach(btn => btn.classList.remove('selected'));
-            button.classList.add('selected');
-            document.getElementById('start-game-btn').disabled = false;
-        };
+    button.onclick = () => {
+        selectedQuizId = quizId;
 
-        container.appendChild(button);
-    });
-}
+        // Atualiza o título do quiz na tela seguinte (opcional)
+        const titleEl = document.getElementById('quiz-title');
+        if (titleEl) titleEl.textContent = quiz.name;
 
+        // Alterna a tela automaticamente
+        showScreen(document.getElementById('waiting-room-screen'));
+
+        // Opcional: Se quiser começar o jogo direto, use isso em vez da linha acima:
+        // startGame();
+    };
+
+    container.appendChild(button);
+});
 
         function updatePlayersUI(players) {
             const playerList = document.getElementById('player-list');
