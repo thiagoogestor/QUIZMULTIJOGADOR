@@ -860,6 +860,12 @@ async function setupAuth() {
             currentUser = user;
             document.getElementById('user-id-display').textContent = user.displayName || user.email || user.uid.substring(0, 8);
         }
+        if (user) {
+    const loginStatusEl = document.createElement('div');
+    loginStatusEl.className = 'text-sm text-gray-500 mt-2 text-center';
+    loginStatusEl.innerHTML = `🔒 Logado como <strong>${user.displayName || user.email}</strong> (Google)`;
+    document.getElementById('lobby-screen').appendChild(loginStatusEl);
+}
     });
 
     const loginBtn = document.getElementById('google-login-btn');
@@ -875,9 +881,13 @@ async function setupAuth() {
                 console.error("Erro no login com Google:", error);
                 alert("Erro ao fazer login com Google.");
             }
-            if (currentUser && currentUser.displayName) {
-    document.getElementById('player-name').value = currentUser.displayName;
-    document.getElementById('player-name').disabled = true;
+if (currentUser && currentUser.displayName) {
+    const nameInput = document.getElementById('player-name');
+    if (!nameInput.value.trim()) {
+        const nameParts = currentUser.displayName.trim().split(" ");
+        const displayName = nameParts.length >= 2 ? `${nameParts[0]} ${nameParts[1]}` : nameParts[0];
+        nameInput.value = displayName.length > 15 ? displayName.substring(0, 15) : displayName;
+    }
 }
         });
     }
@@ -1046,24 +1056,42 @@ function getValidPlayerName() {
             }
         }
 
-        function renderQuizOptions() {
-            const container = document.getElementById('quiz-options-container');
-            container.innerHTML = '';
-            Object.keys(quizzes).forEach((quizId, index) => {
-                const quiz = quizzes[quizId];
-                const button = document.createElement('button');
-                button.className = 'btn btn-secondary quiz-option';
-                button.innerHTML = `<span class="mr-3">${index + 1}.</span> ${quiz.name}`;
-                button.dataset.quizId = quizId;
-                button.onclick = () => {
-                    selectedQuizId = quizId;
-                    document.querySelectorAll('.quiz-option').forEach(btn => btn.classList.remove('selected'));
-                    button.classList.add('selected');
-                    document.getElementById('start-game-btn').disabled = false;
-                };
-                container.appendChild(button);
-            });
+async function renderQuizOptions() {
+    const container = document.getElementById('quiz-options-container');
+    container.innerHTML = '';
+
+    let recordes = {};
+    if (currentUser) {
+        const userRef = doc(db, "users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists() && userSnap.data().recordes) {
+            recordes = userSnap.data().recordes;
         }
+    }
+
+    Object.keys(quizzes).forEach((quizId, index) => {
+        const quiz = quizzes[quizId];
+        const recorde = recordes[quizId] || 0;
+
+        const button = document.createElement('button');
+        button.className = 'btn btn-secondary quiz-option flex justify-between items-center';
+        button.innerHTML = `
+            <span class="mr-3">${index + 1}. ${quiz.name}</span>
+            <span class="text-xs text-indigo-600 font-semibold">🏆 ${recorde} pts</span>
+        `;
+        button.dataset.quizId = quizId;
+
+        button.onclick = () => {
+            selectedQuizId = quizId;
+            document.querySelectorAll('.quiz-option').forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+            document.getElementById('start-game-btn').disabled = false;
+        };
+
+        container.appendChild(button);
+    });
+}
+
 
         function updatePlayersUI(players) {
             const playerList = document.getElementById('player-list');
@@ -1099,6 +1127,10 @@ function getValidPlayerName() {
             if (sortedPlayers.length > 0) {
                  document.getElementById('winner-name').textContent = sortedPlayers[0].name;
             }
+            const myPlayer = sortedPlayers.find(p => p.id === currentUser.uid);
+if (myPlayer && currentGameData && currentGameData.quizId) {
+    salvarRecorde(currentGameData.quizId, myPlayer.score);
+}
         }
         
         function renderQuestion(gameData) {
@@ -1341,6 +1373,25 @@ function getValidPlayerName() {
                  scoreboardModal.classList.add('hidden');
             }
         });
+
+        async function salvarRecorde(quizId, pontuacao) {
+    if (!currentUser || !quizId) return;
+
+    const userRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
+
+    const recordesAnteriores = userSnap.exists() && userSnap.data().recordes ? userSnap.data().recordes : {};
+    const pontuacaoAnterior = recordesAnteriores[quizId] || 0;
+
+    if (pontuacao > pontuacaoAnterior) {
+        recordesAnteriores[quizId] = pontuacao;
+        await setDoc(userRef, {
+            displayName: currentUser.displayName || null,
+            email: currentUser.email || null,
+            recordes: recordesAnteriores
+        }, { merge: true });
+    }
+}
 
         window.onload = () => {
             showScreen(lobbyScreen);
