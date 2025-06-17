@@ -853,8 +853,6 @@
             screenToShow.classList.remove('hidden');
         }
 
-import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
 async function setupAuth() {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
