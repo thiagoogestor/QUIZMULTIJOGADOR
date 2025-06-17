@@ -883,20 +883,34 @@ async function setupAuth() {
     }
 }
 
-        
-        function getValidPlayerName() {
-            const playerName = document.getElementById('player-name').value.trim();
-            if (!playerName) {
-                document.getElementById('error-message').textContent = 'Por favor, digite seu nome!';
-                return null;
-            }
-            if (playerName.length > 15) {
-                document.getElementById('error-message').textContent = 'O nome deve ter no máximo 15 caracteres.';
-                return null;
-            }
-            document.getElementById('error-message').textContent = '';
-            return playerName;
+function getValidPlayerName() {
+    let playerName = document.getElementById('player-name').value.trim();
+
+    // Se não digitou nada e veio do Google
+    if (!playerName && currentUser && currentUser.displayName) {
+        const nameParts = currentUser.displayName.trim().split(" ");
+        if (nameParts.length >= 2) {
+            playerName = `${nameParts[0]} ${nameParts[1]}`;
+        } else {
+            playerName = nameParts[0]; // Se tiver só um nome
         }
+    }
+
+    if (!playerName) {
+        document.getElementById('error-message').textContent = 'Por favor, digite seu nome!';
+        return null;
+    }
+
+    // Se ainda for grande demais, corta para 15 caracteres
+    if (playerName.length > 15) {
+        playerName = playerName.substring(0, 15).trim();
+    }
+
+    document.getElementById('player-name').value = playerName;
+    document.getElementById('error-message').textContent = '';
+    return playerName;
+}
+
 
         document.getElementById('create-game-btn').addEventListener('click', async () => {
             if (!firebaseConfig.apiKey) {
