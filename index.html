@@ -201,7 +201,7 @@
         </div>
     </div>
 
-    <div id="waiting-room-screen" class="hidden flex flex-col items-center justify-center min-h-screen p-6 bg-gray-100 text-center">
+    <div id="quiz-start-screen" class="hidden flex flex-col items-center justify-center min-h-screen p-6 bg-gray-100 text-center">
   <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz Selecionado!</h2>
   <p id="quiz-title" class="text-xl text-gray-600 mb-8">Prepare-se para começar...</p>
   <button id="btn-iniciar-quiz" class="btn btn-primary px-6 py-3 text-lg">Iniciar Quiz</button>
@@ -1023,7 +1023,7 @@ function getValidPlayerName() {
         function updateGameStateUI(gameData) {
             switch(gameData.gameState) {
                 case 'lobby':
-                    showScreen(waitingRoomScreen);
+                    showScreen('quiz-start-screen');
                     document.getElementById('game-code-text').textContent = currentGameId;
                     if (currentUser.uid === gameData.hostId) {
                         document.getElementById('host-controls').classList.remove('hidden');
@@ -1445,6 +1445,7 @@ document.addEventListener("DOMContentLoaded", () => {
       startGame();
     });
   }
+    });
 </script>
 </body>
 </html>
