@@ -867,32 +867,36 @@ async function setupAuth() {
         }
     });
 }
+const loginBtn = document.getElementById('google-login-btn');
+if (loginBtn) {
+    loginBtn.addEventListener('click', async () => {
+        const provider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, provider);
+            currentUser = result.user;
+            document.getElementById('user-id-display').textContent = result.user.displayName || result.user.email;
+            alert("Login com Google realizado com sucesso!");
 
-    const loginBtn = document.getElementById('google-login-btn');
-    if (loginBtn) {
-        loginBtn.addEventListener('click', async () => {
-            const provider = new GoogleAuthProvider();
-            try {
-                const result = await signInWithPopup(auth, provider);
-                currentUser = result.user;
-                document.getElementById('user-id-display').textContent = result.user.displayName || result.user.email;
-                alert("Login com Google realizado com sucesso!");
-            } catch (error) {
-                console.error("Erro no login com Google:", error);
-                alert("Erro ao fazer login com Google.");
+            // Preenche o nome automaticamente se o campo estiver vazio
+            if (currentUser && currentUser.displayName) {
+                const nameInput = document.getElementById('player-name');
+                if (!nameInput.value.trim()) {
+                    const nameParts = currentUser.displayName.trim().split(" ");
+                    const displayName = nameParts.length >= 2
+                        ? `${nameParts[0]} ${nameParts[1]}`
+                        : nameParts[0];
+                    nameInput.value = displayName.length > 15
+                        ? displayName.substring(0, 15)
+                        : displayName;
+                }
             }
-if (currentUser && currentUser.displayName) {
-    const nameInput = document.getElementById('player-name');
-    if (!nameInput.value.trim()) {
-        const nameParts = currentUser.displayName.trim().split(" ");
-        const displayName = nameParts.length >= 2 ? `${nameParts[0]} ${nameParts[1]}` : nameParts[0];
-        nameInput.value = displayName.length > 15 ? displayName.substring(0, 15) : displayName;
-    }
-}
-        });
-    }
-}
 
+        } catch (error) {
+            console.error("Erro no login com Google:", error);
+            alert("Erro ao fazer login com Google.");
+        }
+    });
+} 
 function getValidPlayerName() {
     let playerName = document.getElementById('player-name').value.trim();
 
