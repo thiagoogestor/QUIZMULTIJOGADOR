@@ -859,15 +859,16 @@ async function setupAuth() {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
+
             document.getElementById('user-id-display').textContent = user.displayName || user.email || user.uid.substring(0, 8);
+
+            const loginStatusEl = document.createElement('div');
+            loginStatusEl.className = 'text-sm text-gray-500 mt-2 text-center';
+            loginStatusEl.innerHTML = `🔒 Logado como <strong>${user.displayName || user.email}</strong> (Google)`;
+            document.getElementById('lobby-screen').appendChild(loginStatusEl);
         }
-        if (user) {
-    const loginStatusEl = document.createElement('div');
-    loginStatusEl.className = 'text-sm text-gray-500 mt-2 text-center';
-    loginStatusEl.innerHTML = `🔒 Logado como <strong>${user.displayName || user.email}</strong> (Google)`;
-    document.getElementById('lobby-screen').appendChild(loginStatusEl);
-}
     });
+}
 
     const loginBtn = document.getElementById('google-login-btn');
     if (loginBtn) {
