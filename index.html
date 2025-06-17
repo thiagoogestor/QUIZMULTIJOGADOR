@@ -201,6 +201,12 @@
         </div>
     </div>
 
+    <div id="waiting-room-screen" class="hidden flex flex-col items-center justify-center min-h-screen p-6 bg-gray-100 text-center">
+  <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz Selecionado!</h2>
+  <p id="quiz-title" class="text-xl text-gray-600 mb-8">Prepare-se para começar...</p>
+  <button onclick="startGame()" class="btn btn-primary px-6 py-3 text-lg">Iniciar Quiz</button>
+</div>
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
