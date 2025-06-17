@@ -204,7 +204,7 @@
     <div id="waiting-room-screen" class="hidden flex flex-col items-center justify-center min-h-screen p-6 bg-gray-100 text-center">
   <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz Selecionado!</h2>
   <p id="quiz-title" class="text-xl text-gray-600 mb-8">Prepare-se para começar...</p>
-  <button onclick="startGame()" class="btn btn-primary px-6 py-3 text-lg">Iniciar Quiz</button>
+  <button id="btn-iniciar-quiz" class="btn btn-primary px-6 py-3 text-lg">Iniciar Quiz</button>
 </div>
     
     <script type="module">
@@ -1432,6 +1432,19 @@ document.getElementById('share-score-btn').addEventListener('click', () => {
             showScreen(lobbyScreen);
             setupAuth();
         };
+    function startGame() {
+  showScreen(gameScreen); // troca para a tela do jogo
+  iniciarJogo(); // essa função já deve existir no seu código e iniciar o quiz
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btnIniciar = document.getElementById('btn-iniciar-quiz');
+  if (btnIniciar) {
+    btnIniciar.addEventListener('click', () => {
+      startGame();
+    });
+  }
+});
 </script>
 </body>
 </html>
