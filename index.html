@@ -121,7 +121,7 @@
         <div id="lobby-screen" class="card text-center">
             <h1 class="text-4xl font-bold text-gray-800 mb-4">Inter Quiz !</h1>
             <p class="text-gray-600 mb-8">Crie uma sala ou junte-se a uma existente para começar a diversão.</p>
-             <p class="text-black-600 mb-8">Lembre-se, Jogo é jogado, Lambari é pescado</p>
+             <p class="text-gray-600 mb-8">Lembre-se, Jogo é jogado, Lambari é pescado</p>
 
 
             <div class="space-y-4">
@@ -1357,16 +1357,35 @@ if (myPlayer && currentGameData && currentGameData.quizId) {
             showScreen(lobbyScreen);
         }
 
-        document.getElementById('game-code-display').addEventListener('click', () => {
-            const code = document.getElementById('game-code-text').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                const display = document.getElementById('game-code-display');
-                const originalContent = display.innerHTML;
-                display.innerHTML = 'Copiado!';
-                setTimeout(() => { display.innerHTML = originalContent; }, 1500);
-            });
-        });
+document.getElementById('share-score-btn').addEventListener('click', () => {
+    const winner = document.getElementById('winner-name').textContent.trim();
+    const link = window.location.href;
 
+    // Mensagem que será compartilhada ou copiada
+    const text = winner
+        ? `Joguei o Inter Quiz e o vencedor foi ${winner}! 🧠🏆 Quer tentar me vencer? Acesse: ${link}`
+        : `Acabei de jogar o Inter Quiz! 🧠 Tente também: ${link}`;
+
+    // Se o navegador suportar o menu de compartilhamento nativo (mobile)
+    if (navigator.share) {
+        navigator.share({
+            title: 'Meu resultado no Inter Quiz',
+            text: text,
+            url: link
+        }).catch(err => {
+            console.error("Erro ao compartilhar:", err);
+            alert("Não foi possível abrir o menu de compartilhamento.");
+        });
+    } else {
+        // Fallback: copia o texto para a área de transferência
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Pontuação copiada! Agora é só colar e enviar onde quiser.");
+        }).catch(err => {
+            console.error("Erro ao copiar para a área de transferência:", err);
+            alert("Erro ao copiar. Seu navegador pode não permitir.");
+        });
+    }
+});
         const scoreboardModal = document.getElementById('scoreboard-modal');
         document.getElementById('scoreboard-toggle').addEventListener('click', () => scoreboardModal.classList.remove('hidden'));
         document.getElementById('close-scoreboard-btn').addEventListener('click', () => scoreboardModal.classList.add('hidden'));
