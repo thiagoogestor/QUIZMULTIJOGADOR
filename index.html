@@ -1243,6 +1243,23 @@
             const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId);
             const gameDoc = await getDoc(gameRef);
             if (gameDoc.data().hostId !== currentUser.uid) {
+        document.getElementById('share-score-btn').addEventListener('click', () => {
+    const winner = document.getElementById('winner-name').textContent;
+    const link = window.location.href;
+    const text = `Eu acabei de jogar o Inter Quiz e ${winner === currentUser.displayName ? "ganhei" : "olha quem venceu"}! 🧠🏆 Quer tentar me vencer? Acesse: ${link}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Meu resultado no Inter Quiz',
+            text: text,
+            url: link
+        }).catch(console.error);
+    } else {
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Texto copiado para compartilhar!");
+        });
+    }
+});
                 resetGame();
                 return;
             }
