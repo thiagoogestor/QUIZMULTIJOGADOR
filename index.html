@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Multiplayer para Família</title>
+    <title>Inter Quiz !!</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -850,21 +851,27 @@
             screenToShow.classList.remove('hidden');
         }
 
-        async function setupAuth() {
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    currentUser = user;
-                    document.getElementById('user-id-display').textContent = user.uid.substring(0, 8);
-                } else {
-                    signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed", error));
-                }
-            });
-             if (auth.currentUser) {
-                currentUser = auth.currentUser;
-             } else {
-                await signInAnonymously(auth);
-            }
+import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+async function setupAuth() {
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('user-id-display').textContent = user.displayName || user.email || user.uid.substring(0, 8);
         }
+    });
+
+    if (!auth.currentUser) {
+        const provider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, provider);
+            currentUser = result.user;
+        } catch (error) {
+            console.error("Erro no login com Google:", error);
+            alert("Falha no login com o Google. Tente novamente.");
+        }
+    }
+}
         
         function getValidPlayerName() {
             const playerName = document.getElementById('player-name').value.trim();
