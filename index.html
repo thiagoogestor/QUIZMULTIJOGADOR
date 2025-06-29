@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inter Quiz !!</title>
+    <title>Quiz Multiplayer para Família</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -119,15 +119,12 @@
     <div id="app" class="max-w-3xl w-full mx-auto">
         <!-- Tela de Início / Lobby -->
         <div id="lobby-screen" class="card text-center">
-            <h1 class="text-4xl font-bold text-gray-800 mb-4">Inter Quiz !</h1>
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Quiz em Família!</h1>
             <p class="text-gray-600 mb-8">Crie uma sala ou junte-se a uma existente para começar a diversão.</p>
-             <p class="text-gray-600 mb-8">Lembre-se, Jogo é jogado, Lambari é pescado</p>
-
 
             <div class="space-y-4">
-                <button id="google-login-btn" class="btn btn-secondary w-full justify-center">Entrar com Google</button>
-    <input type="text" id="player-name" class="input-field text-center" placeholder="Digite seu nome">
-    <button id="create-game-btn" class="btn btn-primary w-full justify-center">Criar Sala de Jogos</button>
+                <input type="text" id="player-name" class="input-field text-center" placeholder="Digite seu nome">
+                <button id="create-game-btn" class="btn btn-primary w-full justify-center">Criar Novo Jogo</button>
                 <div class="flex items-center my-4">
                     <hr class="flex-grow border-t border-gray-300">
                     <span class="px-4 text-gray-500 font-semibold">OU</span>
@@ -196,20 +193,13 @@
             <h2 class="text-2xl font-semibold text-indigo-600 mb-6">O grande vencedor é... <span id="winner-name" class="text-3xl"></span>!</h2>
             <h3 class="text-xl font-semibold text-gray-700 mt-8 mb-4">Placar Final:</h3>
             <ul id="final-scoreboard-list" class="space-y-3"></ul>
-            <button id="share-score-btn" class="btn btn-secondary mt-4 w-full justify-center">Compartilhar Pontuação</button>
             <button id="play-again-btn" class="btn btn-primary mt-8 w-full justify-center">Jogar Novamente</button>
         </div>
     </div>
 
-    <div id="quiz-start-screen" class="hidden flex flex-col items-center justify-center min-h-screen p-6 bg-gray-100 text-center">
-  <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz Selecionado!</h2>
-  <p id="quiz-title" class="text-xl text-gray-600 mb-8">Prepare-se para começar...</p>
-  <button id="btn-iniciar-quiz" class="btn btn-primary px-6 py-3 text-lg">Iniciar Quiz</button>
-</div>
-    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, writeBatch, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -846,8 +836,9 @@
         { question: "Qual o nome da famosa cantora de 'La Vie en Rose'?", answers: ["Edith Piaf", "Brigitte Bardot", "Françoise Hardy", "Juliette Gréco"], correct: 0 },
         { question: "Qual o nome do famoso cantor de 'Imagine'?", answers: ["Paul McCartney", "George Harrison", "Ringo Starr", "John Lennon"], correct: 3 }
     ]
-  }
-};
+},
+        };
+
         const lobbyScreen = document.getElementById('lobby-screen');
         const waitingRoomScreen = document.getElementById('waiting-room-screen');
         const gameScreen = document.getElementById('game-screen');
@@ -858,93 +849,36 @@
             screens.forEach(screen => screen.classList.add('hidden'));
             screenToShow.classList.remove('hidden');
         }
-function showQuizStartScreen() {
-  const quizTitleEl = document.getElementById('quiz-title');
-  if (quizTitleEl && quizzes[selectedQuizId]) {
-    quizTitleEl.textContent = quizzes[selectedQuizId].name;
-  }
 
-  const startBtn = document.getElementById('btn-iniciar-quiz');
-  if (startBtn) {
-    startBtn.onclick = () => {
-      startGame();
-    };
-  }
-
-  showScreen(document.getElementById('quiz-start-screen'));
-}
-async function setupAuth() {
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            currentUser = user;
-
-            document.getElementById('user-id-display').textContent = user.displayName || user.email || user.uid.substring(0, 8);
-
-            const loginStatusEl = document.createElement('div');
-            loginStatusEl.className = 'text-sm text-gray-500 mt-2 text-center';
-            loginStatusEl.innerHTML = `🔒 Logado como <strong>${user.displayName || user.email}</strong> (Google)`;
-            document.getElementById('lobby-screen').appendChild(loginStatusEl);
-        }
-    });
-}
-const loginBtn = document.getElementById('google-login-btn');
-if (loginBtn) {
-    loginBtn.addEventListener('click', async () => {
-        const provider = new GoogleAuthProvider();
-        try {
-            const result = await signInWithPopup(auth, provider);
-            currentUser = result.user;
-            document.getElementById('user-id-display').textContent = result.user.displayName || result.user.email;
-            alert("Login com Google realizado com sucesso!");
-
-            // Preenche o nome automaticamente se o campo estiver vazio
-            if (currentUser && currentUser.displayName) {
-                const nameInput = document.getElementById('player-name');
-                if (!nameInput.value.trim()) {
-                    const nameParts = currentUser.displayName.trim().split(" ");
-                    const displayName = nameParts.length >= 2
-                        ? `${nameParts[0]} ${nameParts[1]}`
-                        : nameParts[0];
-                    nameInput.value = displayName.length > 15
-                        ? displayName.substring(0, 15)
-                        : displayName;
+        async function setupAuth() {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('user-id-display').textContent = user.uid.substring(0, 8);
+                } else {
+                    signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed", error));
                 }
+            });
+             if (auth.currentUser) {
+                currentUser = auth.currentUser;
+             } else {
+                await signInAnonymously(auth);
             }
-
-        } catch (error) {
-            console.error("Erro no login com Google:", error);
-            alert("Erro ao fazer login com Google.");
         }
-    });
-} 
-function getValidPlayerName() {
-    let playerName = document.getElementById('player-name').value.trim();
-
-    // Se não digitou nada e veio do Google
-    if (!playerName && currentUser && currentUser.displayName) {
-        const nameParts = currentUser.displayName.trim().split(" ");
-        if (nameParts.length >= 2) {
-            playerName = `${nameParts[0]} ${nameParts[1]}`;
-        } else {
-            playerName = nameParts[0]; // Se tiver só um nome
+        
+        function getValidPlayerName() {
+            const playerName = document.getElementById('player-name').value.trim();
+            if (!playerName) {
+                document.getElementById('error-message').textContent = 'Por favor, digite seu nome!';
+                return null;
+            }
+            if (playerName.length > 15) {
+                document.getElementById('error-message').textContent = 'O nome deve ter no máximo 15 caracteres.';
+                return null;
+            }
+            document.getElementById('error-message').textContent = '';
+            return playerName;
         }
-    }
-
-    if (!playerName) {
-        document.getElementById('error-message').textContent = 'Por favor, digite seu nome!';
-        return null;
-    }
-
-    // Se ainda for grande demais, corta para 15 caracteres
-    if (playerName.length > 15) {
-        playerName = playerName.substring(0, 15).trim();
-    }
-
-    document.getElementById('player-name').value = playerName;
-    document.getElementById('error-message').textContent = '';
-    return playerName;
-}
-
 
         document.getElementById('create-game-btn').addEventListener('click', async () => {
             if (!firebaseConfig.apiKey) {
@@ -1037,7 +971,7 @@ function getValidPlayerName() {
         function updateGameStateUI(gameData) {
             switch(gameData.gameState) {
                 case 'lobby':
-                    showScreen('quiz-start-screen');
+                    showScreen(waitingRoomScreen);
                     document.getElementById('game-code-text').textContent = currentGameId;
                     if (currentUser.uid === gameData.hostId) {
                         document.getElementById('host-controls').classList.remove('hidden');
@@ -1080,38 +1014,24 @@ function getValidPlayerName() {
             }
         }
 
-async function renderQuizOptions() {
-    const container = document.getElementById('quiz-options-container');
-    container.innerHTML = '';
-
-    let recordes = {};
-    if (currentUser) {
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists() && userSnap.data().recordes) {
-            recordes = userSnap.data().recordes;
+        function renderQuizOptions() {
+            const container = document.getElementById('quiz-options-container');
+            container.innerHTML = '';
+            Object.keys(quizzes).forEach((quizId, index) => {
+                const quiz = quizzes[quizId];
+                const button = document.createElement('button');
+                button.className = 'btn btn-secondary quiz-option';
+                button.innerHTML = `<span class="mr-3">${index + 1}.</span> ${quiz.name}`;
+                button.dataset.quizId = quizId;
+                button.onclick = () => {
+                    selectedQuizId = quizId;
+                    document.querySelectorAll('.quiz-option').forEach(btn => btn.classList.remove('selected'));
+                    button.classList.add('selected');
+                    document.getElementById('start-game-btn').disabled = false;
+                };
+                container.appendChild(button);
+            });
         }
-    }
-
-   Object.keys(quizzes).forEach((quizId, index) => {
-    const quiz = quizzes[quizId];
-    const recorde = recordes[quizId] || 0;
-
-    const button = document.createElement('button');
-    button.className = 'btn btn-secondary quiz-option flex justify-between items-center';
-    button.innerHTML = `
-        <span class="mr-3">${index + 1}. ${quiz.name}</span>
-        <span class="text-xs text-indigo-600 font-semibold">🏆 ${recorde} pts</span>
-    `;
-    button.dataset.quizId = quizId;
-
-button.onclick = () => {
-  selectedQuizId = quizId;
-  showQuizStartScreen();
-};
-
-    container.appendChild(button);
-});
 
         function updatePlayersUI(players) {
             const playerList = document.getElementById('player-list');
@@ -1147,10 +1067,6 @@ button.onclick = () => {
             if (sortedPlayers.length > 0) {
                  document.getElementById('winner-name').textContent = sortedPlayers[0].name;
             }
-            const myPlayer = sortedPlayers.find(p => p.id === currentUser.uid);
-if (myPlayer && currentGameData && currentGameData.quizId) {
-    salvarRecorde(currentGameData.quizId, myPlayer.score);
-}
         }
         
         function renderQuestion(gameData) {
@@ -1326,23 +1242,6 @@ if (myPlayer && currentGameData && currentGameData.quizId) {
             const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", currentGameId);
             const gameDoc = await getDoc(gameRef);
             if (gameDoc.data().hostId !== currentUser.uid) {
-        document.getElementById('share-score-btn').addEventListener('click', () => {
-    const winner = document.getElementById('winner-name').textContent;
-    const link = window.location.href;
-    const text = `Eu acabei de jogar o Inter Quiz e ${winner === currentUser.displayName ? "ganhei" : "olha quem venceu"}! 🧠🏆 Quer tentar me vencer? Acesse: ${link}`;
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'Meu resultado no Inter Quiz',
-            text: text,
-            url: link
-        }).catch(console.error);
-    } else {
-        navigator.clipboard.writeText(text).then(() => {
-            alert("Texto copiado para compartilhar!");
-        });
-    }
-});
                 resetGame();
                 return;
             }
@@ -1375,36 +1274,16 @@ if (myPlayer && currentGameData && currentGameData.quizId) {
             showScreen(lobbyScreen);
         }
 
-document.getElementById('share-score-btn').addEventListener('click', () => {
-    const winner = document.getElementById('winner-name').textContent.trim();
-    const link = window.location.href;
-
-    // Buscar o quiz atual e sua pontuação
-    const quizId = currentGameData?.quizId;
-    const quizName = quizId && quizzes[quizId]?.name ? quizzes[quizId].name : "Inter Quiz";
-    const myPlayer = currentPlayers.find(p => p.id === currentUser.uid);
-    const pontos = myPlayer?.score || 0;
-
-    const text = `Acabei de jogar Inter Quest e fiz ${pontos} pontos no quiz "${quizName}"! Será que você consegue me superar?`;
-
-    if (navigator.share) {
-        navigator.share({
-            title: 'Desafio lançado no Inter Quest!',
-            text: text,
-            url: link
-        }).catch(err => {
-            console.error("Erro ao compartilhar:", err);
-            alert("Não foi possível abrir o menu de compartilhamento.");
+        document.getElementById('game-code-display').addEventListener('click', () => {
+            const code = document.getElementById('game-code-text').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const display = document.getElementById('game-code-display');
+                const originalContent = display.innerHTML;
+                display.innerHTML = 'Copiado!';
+                setTimeout(() => { display.innerHTML = originalContent; }, 1500);
+            });
         });
-    } else {
-        navigator.clipboard.writeText(`${text} ${link}`).then(() => {
-            alert("Pontuação copiada! Agora é só colar e desafiar seus amigos.");
-        }).catch(err => {
-            console.error("Erro ao copiar:", err);
-            alert("Erro ao copiar. Seu navegador pode não permitir.");
-        });
-    }
-});
+
         const scoreboardModal = document.getElementById('scoreboard-modal');
         document.getElementById('scoreboard-toggle').addEventListener('click', () => scoreboardModal.classList.remove('hidden'));
         document.getElementById('close-scoreboard-btn').addEventListener('click', () => scoreboardModal.classList.add('hidden'));
@@ -1414,44 +1293,11 @@ document.getElementById('share-score-btn').addEventListener('click', () => {
             }
         });
 
-        async function salvarRecorde(quizId, pontuacao) {
-    if (!currentUser || !quizId) return;
-
-    const userRef = doc(db, "users", currentUser.uid);
-    const userSnap = await getDoc(userRef);
-
-    const recordesAnteriores = userSnap.exists() && userSnap.data().recordes ? userSnap.data().recordes : {};
-    const pontuacaoAnterior = recordesAnteriores[quizId] || 0;
-
-    if (pontuacao > pontuacaoAnterior) {
-        recordesAnteriores[quizId] = pontuacao;
-        await setDoc(userRef, {
-            displayName: currentUser.displayName || null,
-            email: currentUser.email || null,
-            recordes: recordesAnteriores
-        }, { merge: true });
-    }
-}
-
         window.onload = () => {
             showScreen(lobbyScreen);
             setupAuth();
         };
 
-    function startGame() {
-  showScreen(gameScreen); // troca para a tela do jogo
-  iniciarJogo(); // essa função já deve existir no seu código e iniciar o quiz
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const btnIniciar = document.getElementById('btn-iniciar-quiz');
-  if (btnIniciar) {
-    btnIniciar.addEventListener('click', () => {
-      startGame();
-    });
-  }
-    });
-</script>
+    </script>
 </body>
 </html>
-
