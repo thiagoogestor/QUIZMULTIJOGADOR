@@ -1304,15 +1304,14 @@ async function setupAuth() {
             }
         });
 
-if (user.photoURL) {
-    document.getElementById('user-avatar').src = user.photoURL;
-}
-document.getElementById('user-name').textContent = user.displayName || user.email;
-document.getElementById('user-info').classList.remove('hidden');
-
 document.getElementById('logout-btn').onclick = async () => {
     await auth.signOut();
     location.reload();
+};
+
+window.onload = () => {
+    showScreen(lobbyScreen);
+    setupAuth();
 };
 
         window.onload = () => {
