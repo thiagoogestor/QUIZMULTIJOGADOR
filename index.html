@@ -958,49 +958,9 @@ async function setupAuth() {
     });
 }
 
-        
-        function getValidPlayerName() {
-            const playerName = document.getElementById('player-name').value.trim();
-            if (!playerName) {
-                document.getElementById('error-message').textContent = 'Por favor, digite seu nome!';
-                return null;
-            }
-            if (playerName.length > 15) {
-                document.getElementById('error-message').textContent = 'O nome deve ter no máximo 15 caracteres.';
-                return null;
-            }
-            document.getElementById('error-message').textContent = '';
-            return playerName;
-        }
-            if (!currentUser) return;
+         if (!currentUser) return;
 const playerName = currentUser.displayName || "Jogador";
-            
-            const gameCode = Math.random().toString(36).substring(2, 7).toUpperCase();
-            currentGameId = gameCode;
-            
-            const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode);
-            const playerRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode, "players", currentUser.uid);
-
-            const batch = writeBatch(db);
-            batch.set(gameRef, {
-                hostId: currentUser.uid,
-                gameState: 'lobby',
-                currentQuestionIndex: -1,
-                quizId: null,
-                createdAt: serverTimestamp()
-            });
-            batch.set(playerRef, {
-                name: playerName,
-                score: 0,
-                hasAnswered: false,
-                answeredQuestionIndex: null,
-                selectedAnswer: null
-            });
-            await batch.commit();
-
-            await attachToGame(gameCode);
-        });
-
+        
         document.getElementById('join-game-btn').addEventListener('click', async () => {
             if (!firebaseConfig.apiKey) {
                 document.getElementById('error-message').textContent = 'A configuração do Firebase está em falta. Fale com o criador da sala.';
