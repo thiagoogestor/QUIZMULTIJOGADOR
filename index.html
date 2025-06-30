@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Multiplayer para Família</title>
-    <title>Inter Quiz !!</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -871,30 +870,90 @@ async function setupAuth() {
             const result = await signInWithPopup(auth, provider);
             currentUser = result.user;
 
+            // Exibe nome e foto do usuário
             document.getElementById('user-id-display').textContent = currentUser.displayName || currentUser.email;
             if (currentUser.photoURL) {
                 document.getElementById('user-avatar').src = currentUser.photoURL;
             }
             document.getElementById('user-name').textContent = currentUser.displayName || currentUser.email;
             document.getElementById('user-info').classList.remove('hidden');
-
             document.getElementById('post-login-controls').classList.remove('hidden');
             document.getElementById('google-login-btn').classList.add('hidden');
+
+            // ✅ Aqui adicionamos o botão funcionando só após login
+            document.getElementById('create-game-btn').addEventListener('click', async () => {
+                const gameCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+                currentGameId = gameCode;
+
+                const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode);
+                const playerRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode, "players", currentUser.uid);
+
+                const batch = writeBatch(db);
+                batch.set(gameRef, {
+                    hostId: currentUser.uid,
+                    gameState: 'lobby',
+                    currentQuestionIndex: -1,
+                    quizId: null,
+                    createdAt: serverTimestamp()
+                });
+                batch.set(playerRef, {
+                    name: currentUser.displayName || "Jogador",
+                    score: 0,
+                    hasAnswered: false,
+                    answeredQuestionIndex: null,
+                    selectedAnswer: null
+                });
+
+                await batch.commit();
+                await attachToGame(gameCode);
+            });
+
         } catch (error) {
             console.error("Erro no login com Google:", error);
-            alert("Falha no login com o Google. Tente novamente.");
+            alert("Erro ao fazer login com Google.");
         }
     });
 
+    // Se já estiver logado (ex: atualizou a página)
     onAuthStateChanged(auth, (user) => {
         if (user) {
             currentUser = user;
-            document.getElementById('user-id-display').textContent = user.displayName || user.email || user.uid.substring(0, 8);
+            document.getElementById('user-id-display').textContent = user.displayName || user.email || user.uid;
+            if (user.photoURL) {
+                document.getElementById('user-avatar').src = user.photoURL;
+            }
             document.getElementById('user-name').textContent = user.displayName || user.email;
-            if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
             document.getElementById('user-info').classList.remove('hidden');
             document.getElementById('post-login-controls').classList.remove('hidden');
             document.getElementById('google-login-btn').classList.add('hidden');
+
+            // 🔁 Também ativa o botão se já estiver logado
+            document.getElementById('create-game-btn').addEventListener('click', async () => {
+                const gameCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+                currentGameId = gameCode;
+
+                const gameRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode);
+                const playerRef = doc(db, "artifacts", appId, "public/data/quiz_games", gameCode, "players", currentUser.uid);
+
+                const batch = writeBatch(db);
+                batch.set(gameRef, {
+                    hostId: currentUser.uid,
+                    gameState: 'lobby',
+                    currentQuestionIndex: -1,
+                    quizId: null,
+                    createdAt: serverTimestamp()
+                });
+                batch.set(playerRef, {
+                    name: currentUser.displayName || "Jogador",
+                    score: 0,
+                    hasAnswered: false,
+                    answeredQuestionIndex: null,
+                    selectedAnswer: null
+                });
+
+                await batch.commit();
+                await attachToGame(gameCode);
+            });
         }
     });
 }
@@ -913,12 +972,6 @@ async function setupAuth() {
             document.getElementById('error-message').textContent = '';
             return playerName;
         }
-
-        document.getElementById('create-game-btn').addEventListener('click', async () => {
-            if (!firebaseConfig.apiKey) {
-                document.getElementById('error-message').textContent = 'A configuração do Firebase está em falta. Edite o ficheiro HTML.';
-                return;
-            }
             const playerName = getValidPlayerName();
             if (!playerName || !currentUser) return;
             
