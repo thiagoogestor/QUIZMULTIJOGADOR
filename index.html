@@ -124,15 +124,21 @@
             <p class="text-gray-600 mb-8">Crie uma sala ou junte-se a uma existente para começar a diversão.</p>
 
             <div class="space-y-4">
-                <input type="text" id="player-name" class="input-field text-center" placeholder="Digite seu nome">
-                <button id="create-game-btn" class="btn btn-primary w-full justify-center">Criar Novo Jogo</button>
-                <div class="flex items-center my-4">
-                    <hr class="flex-grow border-t border-gray-300">
-                    <span class="px-4 text-gray-500 font-semibold">OU</span>
-                    <hr class="flex-grow border-t border-gray-300">
-                </div>
-                <input type="text" id="game-code-input" class="input-field text-center" placeholder="Digite o código da sala">
-                <button id="join-game-btn" class="btn btn-secondary w-full justify-center">Entrar no Jogo</button>
+                <button id="google-login-btn" class="btn btn-primary w-full justify-center mb-4">
+    Entrar com o Google
+</button>
+               <div id="post-login-controls" class="hidden space-y-4">
+    <button id="create-game-btn" class="btn btn-primary w-full justify-center">Criar Novo Jogo</button>
+
+    <div class="flex items-center my-4">
+        <hr class="flex-grow border-t border-gray-300">
+        <span class="px-4 text-gray-500 font-semibold">OU</span>
+        <hr class="flex-grow border-t border-gray-300">
+    </div>
+
+    <input type="text" id="game-code-input" class="input-field text-center" placeholder="Digite o código da sala">
+    <button id="join-game-btn" class="btn btn-secondary w-full justify-center">Entrar no Jogo</button>
+</div>
             </div>
             <div id="error-message" class="text-red-500 mt-4 font-semibold"></div>
             <div class="mt-6 text-xs text-gray-400">
@@ -858,24 +864,41 @@
 import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 async function setupAuth() {
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            currentUser = user;
-            document.getElementById('user-id-display').textContent = user.displayName || user.email || user.uid.substring(0, 8);
-        }
-    });
+    const provider = new GoogleAuthProvider();
 
-    if (!auth.currentUser) {
-        const provider = new GoogleAuthProvider();
+    document.getElementById('google-login-btn').addEventListener('click', async () => {
         try {
             const result = await signInWithPopup(auth, provider);
             currentUser = result.user;
+
+            document.getElementById('user-id-display').textContent = currentUser.displayName || currentUser.email;
+            if (currentUser.photoURL) {
+                document.getElementById('user-avatar').src = currentUser.photoURL;
+            }
+            document.getElementById('user-name').textContent = currentUser.displayName || currentUser.email;
+            document.getElementById('user-info').classList.remove('hidden');
+
+            document.getElementById('post-login-controls').classList.remove('hidden');
+            document.getElementById('google-login-btn').classList.add('hidden');
         } catch (error) {
             console.error("Erro no login com Google:", error);
             alert("Falha no login com o Google. Tente novamente.");
         }
-    }
+    });
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('user-id-display').textContent = user.displayName || user.email || user.uid.substring(0, 8);
+            document.getElementById('user-name').textContent = user.displayName || user.email;
+            if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('post-login-controls').classList.remove('hidden');
+            document.getElementById('google-login-btn').classList.add('hidden');
+        }
+    });
 }
+
         
         function getValidPlayerName() {
             const playerName = document.getElementById('player-name').value.trim();
