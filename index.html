@@ -972,8 +972,8 @@ async function setupAuth() {
             document.getElementById('error-message').textContent = '';
             return playerName;
         }
-            const playerName = getValidPlayerName();
-            if (!playerName || !currentUser) return;
+            if (!currentUser) return;
+const playerName = currentUser.displayName || "Jogador";
             
             const gameCode = Math.random().toString(36).substring(2, 7).toUpperCase();
             currentGameId = gameCode;
