@@ -1,314 +1,341 @@
-import React, { useState } from "react";
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quiz Preview (no-build)</title>
+    <!-- Tailwind CDN (JIT in the browser for rapid prototyping) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Smoothing */
+      * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
 
-// Prévia 100% local, sem Firebase — foco em melhorias VISUAIS
-// Fluxo: Lobby -> Waiting Room -> Game -> Scoreboard (modal) -> End Screen
+    <!-- React 18 UMD + Babel Standalone -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-const QUIZZES = {
-  geral: {
-    name: "Conhecimentos Gerais",
-    questions: [
-      { q: "Qual é a capital do Brasil?", a: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], c: 2 },
-      { q: "Quem pintou a Mona Lisa?", a: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], c: 2 },
-    ],
-  },
-  ciencia: {
-    name: "Ciência e Tecnologia",
-    questions: [
-      { q: "Qual planeta é conhecido como 'Planeta Vermelho'?", a: ["Vênus", "Marte", "Júpiter", "Saturno"], c: 1 },
-      { q: "Quem desenvolveu a teoria da relatividade?", a: ["Newton", "Galileu", "Einstein", "Tesla"], c: 2 },
-    ],
-  },
-};
+    <script type="text/babel">
+      const { useState } = React;
 
-function Card({ children, className = "" }) {
-  return <div className={`bg-white rounded-xl shadow-xl p-6 ${className}`}>{children}</div>;
-}
+      // Prévia 100% local, sem Firebase — foco em melhorias VISUAIS
+      // Fluxo: Lobby -> Waiting Room -> Game -> Scoreboard (modal) -> End Screen
 
-function Button({ children, variant = "primary", className = "", ...props }) {
-  const base = "inline-flex items-center justify-center w-full font-semibold px-4 py-3 rounded-lg transition";
-  const styles =
-    variant === "primary"
-      ? "bg-indigo-600 text-white hover:bg-indigo-700"
-      : variant === "secondary"
-      ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
-      : "bg-gray-100 text-gray-800 hover:bg-gray-200";
-  return (
-    <button className={`${base} ${styles} ${className}`} {...props}>
-      {children}
-    </button>
-  );
-}
+      const QUIZZES = {
+        geral: {
+          name: "Conhecimentos Gerais",
+          questions: [
+            { q: "Qual é a capital do Brasil?", a: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], c: 2 },
+            { q: "Quem pintou a Mona Lisa?", a: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], c: 2 },
+          ],
+        },
+        ciencia: {
+          name: "Ciência e Tecnologia",
+          questions: [
+            { q: "Qual planeta é conhecido como 'Planeta Vermelho'?", a: ["Vênus", "Marte", "Júpiter", "Saturno"], c: 1 },
+            { q: "Quem desenvolveu a teoria da relatividade?", a: ["Newton", "Galileu", "Einstein", "Tesla"], c: 2 },
+          ],
+        },
+      };
 
-function Input({ className = "", ...props }) {
-  return (
-    <input
-      className={`block w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 focus:outline-none focus:ring-4 focus:ring-indigo-200 ${className}`}
-      {...props}
-    />
-  );
-}
+      function Card({ children, className = "" }) {
+        return <div className={`bg-white rounded-xl shadow-xl p-6 ${className}`}>{children}</div>;
+      }
 
-export default function QuizPreview() {
-  const [screen, setScreen] = useState("lobby");
-  const [name, setName] = useState("");
-  const [isHost, setIsHost] = useState(true);
-  const [gameCode] = useState(() => Math.random().toString(36).slice(2, 7).toUpperCase());
-  const [selectedQuizKey, setSelectedQuizKey] = useState(null);
-  const [dark, setDark] = useState(true); // 🌙 modo escuro visual
+      function Button({ children, variant = "primary", className = "", ...props }) {
+        const base = "inline-flex items-center justify-center w-full font-semibold px-4 py-3 rounded-lg transition";
+        const styles =
+          variant === "primary"
+            ? "bg-indigo-600 text-white hover:bg-indigo-700"
+            : variant === "secondary"
+            ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+            : "bg-gray-100 text-gray-800 hover:bg-gray-200";
+        return (
+          <button className={`${base} ${styles} ${className}`} {...props}>
+            {children}
+          </button>
+        );
+      }
 
-  // Game state
-  const [qid, setQid] = useState(0);
-  const [picked, setPicked] = useState(null);
-  const [score, setScore] = useState(0);
-  const [showBoard, setShowBoard] = useState(false);
+      function Input({ className = "", ...props }) {
+        return (
+          <input
+            className={`block w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 focus:outline-none focus:ring-4 focus:ring-indigo-200 ${className}`}
+            {...props}
+          />
+        );
+      }
 
-  const quiz = selectedQuizKey ? QUIZZES[selectedQuizKey] : null;
-  const total = quiz?.questions.length ?? 0;
-  const current = quiz?.questions[qid];
-  const pct = total ? Math.round(((qid + 1) / total) * 100) : 0;
+      function QuizPreview() {
+        const [screen, setScreen] = useState("lobby");
+        const [name, setName] = useState("");
+        const [isHost, setIsHost] = useState(true);
+        const [gameCode] = useState(() => Math.random().toString(36).slice(2, 7).toUpperCase());
+        const [selectedQuizKey, setSelectedQuizKey] = useState(null);
+        const [dark, setDark] = useState(true); // 🌙 modo escuro visual
 
-  // Apenas o jogador atual
-  const players = [{ id: "1", name: name || "Você", points: score }];
+        // Game state
+        const [qid, setQid] = useState(0);
+        const [picked, setPicked] = useState(null);
+        const [score, setScore] = useState(0);
+        const [showBoard, setShowBoard] = useState(false);
 
-  function handleCreate() {
-    if (!name.trim()) return alert("Digite seu nome");
-    setIsHost(true);
-    setScreen("waiting");
-  }
+        const quiz = selectedQuizKey ? QUIZZES[selectedQuizKey] : null;
+        const total = quiz?.questions.length ?? 0;
+        const current = quiz?.questions[qid];
+        const pct = total ? Math.round(((qid + 1) / total) * 100) : 0;
 
-  function handleJoin() {
-    if (!name.trim()) return alert("Digite seu nome");
-    setIsHost(false);
-    setScreen("waiting");
-  }
+        // Apenas o jogador atual
+        const players = [{ id: "1", name: name || "Você", points: score }];
 
-  function startGame() {
-    if (!selectedQuizKey) return;
-    setScreen("game");
-  }
+        function handleCreate() {
+          if (!name.trim()) return alert("Digite seu nome");
+          setIsHost(true);
+          setScreen("waiting");
+        }
 
-  function chooseAnswer(i) {
-    if (picked !== null) return;
-    setPicked(i);
-    if (i === current.c) setScore((s) => s + 1);
-  }
+        function handleJoin() {
+          if (!name.trim()) return alert("Digite seu nome");
+          setIsHost(false);
+          setScreen("waiting");
+        }
 
-  function nextQuestion() {
-    if (!quiz) return;
-    const next = qid + 1;
-    if (next >= total) {
-      setScreen("end");
-      return;
-    }
-    setQid(next);
-    setPicked(null);
-  }
+        function startGame() {
+          if (!selectedQuizKey) return;
+          setScreen("game");
+        }
 
-  function resetGame() {
-    setScreen("waiting");
-    setSelectedQuizKey(null);
-    setQid(0);
-    setPicked(null);
-    setScore(0);
-  }
+        function chooseAnswer(i) {
+          if (picked !== null) return;
+          setPicked(i);
+          if (i === current.c) setScore((s) => s + 1);
+        }
 
-  // === UI helpers ===
-  const LETTERS = ["A", "B", "C", "D", "E", "F"];
+        function nextQuestion() {
+          if (!quiz) return;
+          const next = qid + 1;
+          if (next >= total) {
+            setScreen("end");
+            return;
+          }
+          setQid(next);
+          setPicked(null);
+        }
 
-  return (
-    <div className={`${dark ? "dark" : ""}`}>
-      <div className="min-h-screen p-6 flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-fuchsia-900 dark:from-slate-950 dark:via-indigo-950 dark:to-black transition-colors">
-        <div className="w-full max-w-3xl">
-          {/* Header minimalista */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-white/80 text-sm tracking-wide">AR-KN Quiz • v1 Preview</div>
-            <button onClick={() => setDark((d)=>!d)} className="text-white/80 text-xs px-3 py-1 rounded-full border border-white/20 hover:bg-white/10">
-              {dark ? "🌙 Dark" : "☀️ Light"}
-            </button>
-          </div>
+        function resetGame() {
+          setScreen("waiting");
+          setSelectedQuizKey(null);
+          setQid(0);
+          setPicked(null);
+          setScore(0);
+        }
 
-          {screen === "lobby" && (
-            <Card className="text-center bg-white/10 backdrop-blur-xl border border-white/10 text-white">
-              <h1 className="text-4xl font-extrabold mb-2">Quiz em Família!</h1>
-              <p className="text-white/70 mb-8">Crie uma sala ou entre em uma para começar.</p>
+        const LETTERS = ["A", "B", "C", "D", "E", "F"];
 
-              <div className="space-y-4">
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Digite seu nome" className="bg-white/10 border-white/20 text-white placeholder:text-white/50" />
-                <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Novo Jogo</Button>
-                <div className="flex items-center my-2 text-white/60">
-                  <hr className="flex-grow border-t border-white/20" />
-                  <span className="px-4 font-semibold">OU</span>
-                  <hr className="flex-grow border-t border-white/20" />
+        return (
+          <div className={`${dark ? "dark" : ""}`}>
+            <div className="min-h-screen p-6 flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-fuchsia-900 dark:from-slate-950 dark:via-indigo-950 dark:to-black transition-colors">
+              <div className="w-full max-w-3xl">
+                {/* Header minimalista */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-white/80 text-sm tracking-wide">AR-KN Quiz • v1 Preview</div>
+                  <button onClick={() => setDark((d)=>!d)} className="text-white/80 text-xs px-3 py-1 rounded-full border border-white/20 hover:bg-white/10">
+                    {dark ? "🌙 Dark" : "☀️ Light"}
+                  </button>
                 </div>
-                <Input placeholder="Digite o código da sala" className="bg-white/10 border-white/20 text-white placeholder:text-white/50" />
-                <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar no Jogo</Button>
-              </div>
 
-              <div className="mt-6 text-xs text-white/50">Seu ID de Jogador: <span>—</span></div>
-            </Card>
-          )}
+                {screen === "lobby" && (
+                  <Card className="text-center bg-white/10 backdrop-blur-xl border border-white/10 text-white">
+                    <h1 className="text-4xl font-extrabold mb-2">Quiz em Família!</h1>
+                    <p className="text-white/70 mb-8">Crie uma sala ou entre em uma para começar.</p>
 
-          {screen === "waiting" && (
-            <Card className="bg-white/10 backdrop-blur-xl border border-white/10 text-white">
-              <h2 className="text-2xl font-bold mb-2">Sala de Espera</h2>
-              <p className="text-white/70 mb-4">Compartilhe o código com outros jogadores!</p>
-              <div className="border-2 border-dashed border-white/30 rounded-lg p-4 text-center text-xl font-bold select-all">
-                {gameCode}
-              </div>
-              <p className="text-sm text-white/60 mt-2 text-center">Clique no código para copiar</p>
-
-              <h3 className="text-xl font-semibold mt-6 mb-2">Jogadores na Sala:</h3>
-              <ul className="space-y-2">
-                {players.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
-                    <span className="font-medium">{p.name}</span>
-                    <span className="text-sm text-white/60">{p.points} pts</span>
-                  </li>
-                ))}
-              </ul>
-
-              {isHost ? (
-                <div className="mt-6">
-                  <h3 className="text-xl font-semibold mb-2">Escolha o Tema do Quiz:</h3>
-                  <div className="grid grid-cols-1 gap-2 mb-4">
-                    {Object.entries(QUIZZES).map(([key, q]) => (
-                      <button
-                        key={key}
-                        onClick={() => setSelectedQuizKey(key)}
-                        className={`text-left px-4 py-3 rounded-xl border transition transform ${
-                          selectedQuizKey === key
-                            ? "bg-indigo-600/90 text-white border-indigo-400 shadow-lg scale-[1.01]"
-                            : "bg-white/5 text-white/90 hover:bg-white/10 border-white/10"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="font-semibold">{q.name}</div>
-                          <div className="text-xs opacity-75">{q.questions.length} questões</div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  <Button onClick={startGame} disabled={!selectedQuizKey} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Começar o Jogo!</Button>
-                </div>
-              ) : (
-                <p className="mt-6 text-center font-semibold text-white/70">Aguardando o anfitrião escolher um tema e iniciar...</p>
-              )}
-            </Card>
-          )}
-
-          {screen === "game" && (
-            <Card className="bg-white/10 backdrop-blur-xl border border-white/10 text-white">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div className="text-sm font-medium text-white/60">{quiz?.name}</div>
-                  <div className="text-lg font-bold">
-                    Pergunta <span>{qid + 1}</span>/<span>{total}</span>
-                  </div>
-                </div>
-                <button className="font-semibold text-indigo-300 hover:text-indigo-200" onClick={() => setShowBoard(true)}>Ver Pontuação</button>
-              </div>
-
-              {/* Pergunta */}
-              <div className="mb-4 text-xl font-semibold">{current?.q}</div>
-
-              {/* Respostas com chips A/B/C/D e feedback visual */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {current?.a.map((alt, i) => {
-                  const isPicked = picked === i;
-                  const isCorrect = picked !== null && i === current.c;
-                  const base = "px-4 py-3 rounded-xl border text-left transition transform";
-                  const state =
-                    picked === null
-                      ? "bg-white/5 hover:bg-white/10 hover:scale-[1.01] border-white/10"
-                      : isCorrect
-                      ? "bg-emerald-500/20 border-emerald-400"
-                      : isPicked
-                      ? "bg-rose-500/20 border-rose-400"
-                      : "bg-white/5 opacity-60 border-white/10";
-                  return (
-                    <button key={i} className={`${base} ${state}`} onClick={() => chooseAnswer(i)}>
-                      <div className="flex items-center gap-3">
-                        <span className={`shrink-0 w-8 h-8 grid place-items-center rounded-full text-sm font-bold ${
-                          picked === null
-                            ? "bg-white/10 text-white/80"
-                            : isCorrect
-                            ? "bg-emerald-500 text-white"
-                            : isPicked
-                            ? "bg-rose-500 text-white"
-                            : "bg-white/10 text-white/60"
-                        }`}>
-                          {LETTERS[i]}
-                        </span>
-                        <span className="flex-1">{alt}</span>
-                        {picked !== null && (
-                          <span className="text-lg">
-                            {isCorrect ? "✅" : isPicked ? "❌" : ""}
-                          </span>
-                        )}
+                    <div className="space-y-4">
+                      <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Digite seu nome" className="bg-white/10 border-white/20 text-white placeholder:text-white/50" />
+                      <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Novo Jogo</Button>
+                      <div className="flex items-center my-2 text-white/60">
+                        <hr className="flex-grow border-t border-white/20" />
+                        <span className="px-4 font-semibold">OU</span>
+                        <hr className="flex-grow border-t border-white/20" />
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
+                      <Input placeholder="Digite o código da sala" className="bg-white/10 border-white/20 text-white placeholder:text-white/50" />
+                      <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar no Jogo</Button>
+                    </div>
 
-              {/* Barra de progresso com "carro" visual */}
-              <div className="mt-6">
-                <div className="relative w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-2 bg-indigo-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                  <div className="absolute -top-4" style={{ left: `calc(${pct}% - 10px)` }}>
-                    <span className="text-xl select-none">🚗</span>
+                    <div className="mt-6 text-xs text-white/50">Seu ID de Jogador: <span>—</span></div>
+                  </Card>
+                )}
+
+                {screen === "waiting" && (
+                  <Card className="bg-white/10 backdrop-blur-xl border border-white/10 text-white">
+                    <h2 className="text-2xl font-bold mb-2">Sala de Espera</h2>
+                    <p className="text-white/70 mb-4">Compartilhe o código com outros jogadores!</p>
+                    <div className="border-2 border-dashed border-white/30 rounded-lg p-4 text-center text-xl font-bold select-all">
+                      {gameCode}
+                    </div>
+                    <p className="text-sm text-white/60 mt-2 text-center">Clique no código para copiar</p>
+
+                    <h3 className="text-xl font-semibold mt-6 mb-2">Jogadores na Sala:</h3>
+                    <ul className="space-y-2">
+                      {players.map((p) => (
+                        <li key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
+                          <span className="font-medium">{p.name}</span>
+                          <span className="text-sm text-white/60">{p.points} pts</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {isHost ? (
+                      <div className="mt-6">
+                        <h3 className="text-xl font-semibold mb-2">Escolha o Tema do Quiz:</h3>
+                        <div className="grid grid-cols-1 gap-2 mb-4">
+                          {Object.entries(QUIZZES).map(([key, q]) => (
+                            <button
+                              key={key}
+                              onClick={() => setSelectedQuizKey(key)}
+                              className={`text-left px-4 py-3 rounded-xl border transition transform ${
+                                selectedQuizKey === key
+                                  ? "bg-indigo-600/90 text-white border-indigo-400 shadow-lg scale-[1.01]"
+                                  : "bg-white/5 text-white/90 hover:bg-white/10 border-white/10"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="font-semibold">{q.name}</div>
+                                <div className="text-xs opacity-75">{q.questions.length} questões</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                        <Button onClick={startGame} disabled={!selectedQuizKey} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Começar o Jogo!</Button>
+                      </div>
+                    ) : (
+                      <p className="mt-6 text-center font-semibold text-white/70">Aguardando o anfitrião escolher um tema e iniciar...</p>
+                    )}
+                  </Card>
+                )}
+
+                {screen === "game" && (
+                  <Card className="bg-white/10 backdrop-blur-xl border border-white/10 text-white">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <div className="text-sm font-medium text-white/60">{quiz?.name}</div>
+                        <div className="text-lg font-bold">
+                          Pergunta <span>{qid + 1}</span>/<span>{total}</span>
+                        </div>
+                      </div>
+                      <button className="font-semibold text-indigo-300 hover:text-indigo-200" onClick={() => setShowBoard(true)}>Ver Pontuação</button>
+                    </div>
+
+                    {/* Pergunta */}
+                    <div className="mb-4 text-xl font-semibold">{current?.q}</div>
+
+                    {/* Respostas com chips A/B/C/D e feedback visual */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {current?.a.map((alt, i) => {
+                        const isPicked = picked === i;
+                        const isCorrect = picked !== null && i === current.c;
+                        const base = "px-4 py-3 rounded-xl border text-left transition transform";
+                        const state =
+                          picked === null
+                            ? "bg-white/5 hover:bg-white/10 hover:scale-[1.01] border-white/10"
+                            : isCorrect
+                            ? "bg-emerald-500/20 border-emerald-400"
+                            : isPicked
+                            ? "bg-rose-500/20 border-rose-400"
+                            : "bg-white/5 opacity-60 border-white/10";
+                        return (
+                          <button key={i} className={`${base} ${state}`} onClick={() => chooseAnswer(i)}>
+                            <div className="flex items-center gap-3">
+                              <span className={`shrink-0 w-8 h-8 grid place-items-center rounded-full text-sm font-bold ${
+                                picked === null
+                                  ? "bg-white/10 text-white/80"
+                                  : isCorrect
+                                  ? "bg-emerald-500 text-white"
+                                  : isPicked
+                                  ? "bg-rose-500 text-white"
+                                  : "bg-white/10 text-white/60"
+                              }`}>
+                                {["A","B","C","D","E","F"][i]}
+                              </span>
+                              <span className="flex-1">{alt}</span>
+                              {picked !== null && (
+                                <span className="text-lg">
+                                  {isCorrect ? "✅" : isPicked ? "❌" : ""}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Barra de progresso com "carro" visual */}
+                    <div className="mt-6">
+                      <div className="relative w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-2 bg-indigo-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        <div className="absolute -top-4" style={{ left: `calc(${pct}% - 10px)` }}>
+                          <span className="text-xl select-none">🚗</span>
+                        </div>
+                      </div>
+                      <div className="text-xs text-white/60 mt-1">Progresso: {pct}%</div>
+                    </div>
+
+                    {/* Próxima */}
+                    <div className="mt-6 text-center">
+                      <Button onClick={nextQuestion} disabled={picked === null} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Próxima Pergunta</Button>
+                    </div>
+                  </Card>
+                )}
+
+                {screen === "end" && (
+                  <Card className="text-center bg-white/10 backdrop-blur-xl border border-white/10 text-white">
+                    <h1 className="text-4xl font-extrabold mb-2">Fim de Jogo!</h1>
+                    <h2 className="text-2xl font-semibold text-indigo-200 mb-6">
+                      O grande vencedor é... <span className="text-3xl text-white">{players[0].name}</span>!
+                    </h2>
+                    <h3 className="text-xl font-semibold mt-4 mb-2">Placar Final:</h3>
+                    <ul className="space-y-2 max-w-md mx-auto">
+                      {players.map((p, i) => (
+                        <li key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
+                          <span className="font-medium">{i + 1}. {p.name}</span>
+                          <span className="text-sm text-white/70">{p.points} pts</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-6">
+                      <Button onClick={resetGame} className="rounded-full">Jogar Novamente</Button>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Modal de Pontuação */}
+                {showBoard && (
+                  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <Card className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/10 text-white">
+                      <h2 className="text-2xl font-bold mb-4">Pontuação</h2>
+                      <ul className="space-y-2">
+                        {players.map((p, i) => (
+                          <li key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
+                            <span className="font-medium">{i + 1}. {p.name}</span>
+                            <span className="text-sm text-white/70">{p.points} pts</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <Button variant="secondary" className="mt-6 rounded-full" onClick={() => setShowBoard(false)}>Fechar</Button>
+                    </Card>
                   </div>
-                </div>
-                <div className="text-xs text-white/60 mt-1">Progresso: {pct}%</div>
+                )}
               </div>
-
-              {/* Próxima */}
-              <div className="mt-6 text-center">
-                <Button onClick={nextQuestion} disabled={picked === null} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Próxima Pergunta</Button>
-              </div>
-            </Card>
-          )}
-
-          {screen === "end" && (
-            <Card className="text-center bg-white/10 backdrop-blur-xl border border-white/10 text-white">
-              <h1 className="text-4xl font-extrabold mb-2">Fim de Jogo!</h1>
-              <h2 className="text-2xl font-semibold text-indigo-200 mb-6">
-                O grande vencedor é... <span className="text-3xl text-white">{players[0].name}</span>!
-              </h2>
-              <h3 className="text-xl font-semibold mt-4 mb-2">Placar Final:</h3>
-              <ul className="space-y-2 max-w-md mx-auto">
-                {players.map((p, i) => (
-                  <li key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
-                    <span className="font-medium">{i + 1}. {p.name}</span>
-                    <span className="text-sm text-white/70">{p.points} pts</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-6">
-                <Button onClick={resetGame} className="rounded-full">Jogar Novamente</Button>
-              </div>
-            </Card>
-          )}
-
-          {/* Modal de Pontuação */}
-          {showBoard && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-              <Card className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/10 text-white">
-                <h2 className="text-2xl font-bold mb-4">Pontuação</h2>
-                <ul className="space-y-2">
-                  {players.map((p, i) => (
-                    <li key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
-                      <span className="font-medium">{i + 1}. {p.name}</span>
-                      <span className="text-sm text-white/70">{p.points} pts</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button variant="secondary" className="mt-6 rounded-full" onClick={() => setShowBoard(false)}>Fechar</Button>
-              </Card>
             </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<QuizPreview />);
+    </script>
+  </body>
+</html>
