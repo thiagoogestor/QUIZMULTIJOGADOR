@@ -47,6 +47,8 @@ const firebaseConfig = {
       const auth = firebase.auth();
       const googleProvider = new firebase.auth.GoogleAuthProvider();
 
+      databaseURL: "https://quizmultijogador-default-rtdb.firebaseio.com/"
+
       // 📚 DATASET DEMO (2 quizes)
       const QUIZZES = {
         geral: {
@@ -453,4 +455,5 @@ const firebaseConfig = {
     </script>
   </body>
 </html>
+
 
