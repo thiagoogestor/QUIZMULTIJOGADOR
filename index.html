@@ -33,12 +33,15 @@
 
       // 🔧 COLE SUA CONFIG DO FIREBASE AQUI
       const firebaseConfig = {
-        apiKey: "COLE_AQUI",
-        authDomain: "SEU-PROJETO.firebaseapp.com",
-        databaseURL: "https://SEU-PROJETO-default-rtdb.firebaseio.com",
-        projectId: "SEU-PROJETO",
-        appId: "COLE_AQUI"
-      };
+  apiKey: "AIzaSyBu2s6DU9d-hc5HTqSuyYLV6Ut0oOwRIls",
+  authDomain: "quizmultijogador.firebaseapp.com",
+  databaseURL: "https://quizmultijogador-default-rtdb.firebaseio.com",
+  projectId: "quizmultijogador",
+  storageBucket: "quizmultijogador.firebasestorage.app",
+  messagingSenderId: "245519129065",
+  appId: "1:245519129065:web:95727cf109edad07f29378",
+  measurementId: "G-0BRETH5CW3"
+};
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
       const auth = firebase.auth();
@@ -301,7 +304,6 @@
             <div className="w-full max-w-3xl">
               {/* Header */}
               <div className="flex items-center justify-between mb-4 text-white/80">
-                <div className="text-sm tracking-wide">AR-KN Quiz • Firebase Multiplayer</div>
                 <div className="flex items-center gap-3">
                   <div className="text-xs">Sala: <span className="font-mono">{room || "—"}</span></div>
                   {user ? (
@@ -318,8 +320,8 @@
 
               {screen === "lobby" && (
                 <Card className="text-center">
-                  <h1 className="text-4xl font-extrabold mb-2">Quiz em Família!</h1>
-                  <p className="text-white/70 mb-8">Sem servidor. Cole sua config do Firebase acima e jogue.</p>
+                  <h1 className="text-4xl font-extrabold mb-2">Quiz Verso</h1>
+                  <p className="text-white/70 mb-8">Onde a Diversão é garantida e o aprendizado Contínuo!</p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                     <div>
@@ -333,8 +335,8 @@
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala (Host)</Button>
-                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar na Sala (Jogador)</Button>
+                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala</Button>
+                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar na Sala</Button>
                   </div>
 
                   <div className="mt-6 text-xs text-white/60">Dica: compartilhe o código <span className="font-mono">{gameCode}</span> com os amigos.</div>
@@ -500,3 +502,4 @@
     </script>
   </body>
 </html>
+
