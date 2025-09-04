@@ -83,6 +83,23 @@
         },
       };
 
+      // Normaliza cada questão para o formato { q, a, c }
+function normalizeQuizData(baseQuiz) {
+  if (!baseQuiz) return null;
+  const qs = (baseQuiz.questions || []).map((item) => {
+    // se já está no formato esperado, mantém
+    if (typeof item?.q !== "undefined" && Array.isArray(item.a) && typeof item?.c !== "undefined") {
+      return item;
+    }
+    // adapta de question/answers/correct
+    return {
+      q: item.question,
+      a: item.answers,
+      c: item.correct,
+    };
+  });
+  return { name: baseQuiz.name, questions: qs };
+}
       function Card({ children, className = "" }) {
         return <div className={`bg-white/10 backdrop-blur-xl border border-white/10 text-white rounded-xl shadow-xl p-6 ${className}`}>{children}</div>;
       }
@@ -157,7 +174,7 @@
           fetchBests(user);
         }, [user]);
 
-        const quiz = selectedQuizKey ? QUIZZES[selectedQuizKey] : null;
+        const quiz = normalizeQuizData(selectedQuizKey ? QUIZZES[selectedQuizKey] : null);
         const total = quiz?.questions.length ?? 0;
         const current = quiz?.questions[qid];
         const pct = total ? Math.round(((qid + 1) / total) * 100) : 0;
@@ -520,5 +537,6 @@
     </script>
   </body>
 </html>
+
 
 
