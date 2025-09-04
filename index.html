@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Quiz Multiplayer (Firebase • 2 quizes)</title>
+    <title>Quiz Multiplayer (Firebase • Login Google + Histórico)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -29,19 +29,16 @@
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useState } = React;
+      const { useState, useRef, useEffect } = React;
 
       // 🔧 COLE SUA CONFIG DO FIREBASE AQUI
       const firebaseConfig = {
-  apiKey: "AIzaSyBu2s6DU9d-hc5HTqSuyYLV6Ut0oOwRIls",
-  authDomain: "quizmultijogador.firebaseapp.com",
-  databaseURL: "https://quizmultijogador-default-rtdb.firebaseio.com",
-  projectId: "quizmultijogador",
-  storageBucket: "quizmultijogador.firebasestorage.app",
-  messagingSenderId: "245519129065",
-  appId: "1:245519129065:web:95727cf109edad07f29378",
-  measurementId: "G-0BRETH5CW3"
-};
+        apiKey: "COLE_AQUI",
+        authDomain: "SEU-PROJETO.firebaseapp.com",
+        databaseURL: "https://SEU-PROJETO-default-rtdb.firebaseio.com",
+        projectId: "SEU-PROJETO",
+        appId: "COLE_AQUI"
+      };
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
       const auth = firebase.auth();
@@ -102,49 +99,42 @@
         const [selectedQuizKey, setSelectedQuizKey] = useState(null);
         const [copied, setCopied] = useState(false);
 
-        const [playerId] = useState(() => Math.random().toString(36).slice(2,10));
+        const [user, setUser] = useState(null);
+        const [playerIdFallback] = useState(() => Math.random().toString(36).slice(2,10));
         const [room, setRoom] = useState("");
         const [players, setPlayers] = useState([]);
         const [qid, setQid] = useState(0);
         const [picked, setPicked] = useState(null);
         const [started, setStarted] = useState(false);
         const [joinCode, setJoinCode] = useState("");
-        const [user, setUser] = React.useState(null);
+
+        const savedOnceRef = useRef(false);
+
+        const pid = user?.uid || playerIdFallback; // usa UID do Google se tiver login
+
+        useEffect(() => {
+          const unsub = auth.onAuthStateChanged((u) => {
+            setUser(u);
+            if (u && !name) setName(u.displayName || (u.email ? u.email.split("@")[0] : "Jogador"));
+          });
+          return unsub;
+        }, [name]);
 
         const quiz = selectedQuizKey ? QUIZZES[selectedQuizKey] : null;
         const total = quiz?.questions.length ?? 0;
         const current = quiz?.questions[qid];
         const pct = total ? Math.round(((qid + 1) / total) * 100) : 0;
 
-React.useEffect(() => {
-  const unsub = auth.onAuthStateChanged((u) => {
-    setUser(u);
-    // se logou e o campo "name" está vazio, usa o nome do Google
-    if (u && !name) setName(u.displayName || (u.email ? u.email.split("@")[0] : "Jogador"));
-  });
-  return unsub;
-}, []);
+        async function copyCode(){ try{ await navigator.clipboard.writeText(room || gameCode); setCopied(true); setTimeout(()=>setCopied(false),1500);}catch{} }
+        async function signInGoogle(){ try{ await auth.signInWithPopup(googleProvider); } catch{ await auth.signInWithRedirect(googleProvider); } }
+        function signOutGoogle(){ auth.signOut(); }
 
-        async function signInGoogle() {
-  try {
-    await auth.signInWithPopup(googleProvider);
-  } catch {
-    // fallback para mobile
-    await auth.signInWithRedirect(googleProvider);
-  }
-}
-function signOutGoogle() { auth.signOut(); }
-
-        async function copyCode() { try { await navigator.clipboard.writeText(room || gameCode); setCopied(true); setTimeout(()=>setCopied(false),1500); } catch {} }
-      
-        // helpers de referência da sala no Realtime DB
         const roomRefs = (rid) => ({
           players: db.ref(`rooms/${rid}/players`),
           state:   db.ref(`rooms/${rid}/state`),
           answers: (q) => db.ref(`rooms/${rid}/answers/${q}`),
         });
 
-        // Escutar players+state; puxa também o tema (quiz) do host e detecta fim de jogo
         function listenRoom(rid){
           const { players, state } = roomRefs(rid);
           players.on("value", (snap)=>{
@@ -156,10 +146,9 @@ function signOutGoogle() { auth.signOut(); }
             const s = snap.val() || { started:false, qid:0 };
             const startedNow = !!s.started;
 
-            // sincroniza tema (necessário para quem não é host)
+            // sincroniza tema pra quem não é host
             if (s.theme) setSelectedQuizKey(s.theme);
 
-            // calcula total para detectar fim
             const key = s.theme || selectedQuizKey;
             const totalQ = key && QUIZZES[key] ? QUIZZES[key].questions.length : 0;
 
@@ -169,149 +158,138 @@ function signOutGoogle() { auth.signOut(); }
 
             if (startedNow) {
               setScreen("game");
+              savedOnceRef.current = false; // começou nova partida
             } else {
-              // fim de jogo quando host encerra
-              if (s.end === true || (typeof s.qid === "number" && totalQ > 0 && s.qid >= totalQ)) {
+              const isEnd = (s.end === true) || (typeof s.qid === "number" && totalQ > 0 && s.qid >= totalQ);
+              if (isEnd) {
                 setScreen("end");
+                saveFinalScoreIfNeeded({ theme: key, totalQ, ended: true });
               }
             }
           });
         }
-const savedOnceRef = React.useRef(false);
 
-function saveFinalScoreIfNeeded({ theme, totalQ, ended }) {
-  if (!user || !room || !ended || savedOnceRef.current) return;
-  savedOnceRef.current = true;
-
-  const myPoints = (players.find(p => p.id === playerId)?.points) || 0;
-  const payload = {
-    theme,
-    points: myPoints,
-    totalQuestions: totalQ,
-    room,
-    at: Date.now(),
-    displayName: user.displayName || name || "Jogador",
-    uid: user.uid
-  };
-
-  // histórico do usuário
-  db.ref(`users/${user.uid}/results`).push(payload);
-
-  // leaderboard por tema (guarda o melhor)
-  const lbRef = db.ref(`leaderboards/${theme}/${user.uid}`);
-  lbRef.transaction(curr => {
-    if (!curr || myPoints > (curr.points || 0)) {
-      return {
-        points: myPoints,
-        displayName: payload.displayName,
-        photoURL: user.photoURL || null,
-        uid: user.uid,
-        updatedAt: Date.now()
-      };
-    }
-    return curr;
-  });
-}
-
-        // Host: cria sala
-       function handleCreate(){
-          if (!user) return alert("Entre com o Google primeiro (topo da tela).");
+        function handleCreate(){
+          // opcional: exigir login → if (!user) return alert("Entre com o Google primeiro.");
           if (!name.trim()) return alert("Digite seu nome");
           const rid = gameCode;
           const { players } = roomRefs(rid);
-          players.child(playerId).set({ name, points:0 });
-          players.child(playerId).onDisconnect().remove();
+          players.child(pid).set({ name: user?.displayName || name, points:0 });
+          players.child(pid).onDisconnect().remove();
           setRoom(rid); setIsHost(true); setScreen("waiting");
           listenRoom(rid);
         }
-        // Jogador: entra em sala
+
         function handleJoin(){
-          if (!user) return alert("Entre com o Google primeiro (topo da tela).");
+          // opcional: exigir login → if (!user) return alert("Entre com o Google primeiro.");
           if (!name.trim()) return alert("Digite seu nome");
           if (!joinCode.trim()) return alert("Digite o código da sala");
           const rid = joinCode.trim().toUpperCase();
           const { players } = roomRefs(rid);
-          players.child(playerId).set({ name, points:0 });
-          players.child(playerId).onDisconnect().remove();
+          players.child(pid).set({ name: user?.displayName || name, points:0 });
+          players.child(pid).onDisconnect().remove();
           setRoom(rid); setIsHost(false); setScreen("waiting");
           listenRoom(rid);
         }
 
-        // Host: inicia
         function startGameHost(){
           if (!selectedQuizKey || !quiz) return;
           const rid = room || gameCode;
           const { state, answers, players } = roomRefs(rid);
           state.set({ started:true, qid:0, correct: quiz.questions[0].c, theme: selectedQuizKey, end:false });
+          savedOnceRef.current = false;
           answers(0).off();
           answers(0).on("child_added", (snap)=>{
-            const { choice } = snap.val()||{}; const pid = snap.key;
-            if (Number(choice) === Number(quiz.questions[0].c)) players.child(pid).child("points").transaction(p => (p||0)+1);
+            const { choice } = snap.val()||{}; const pidAns = snap.key;
+            if (Number(choice) === Number(quiz.questions[0].c)) players.child(pidAns).child("points").transaction(p => (p||0)+1);
           });
           setScreen("game");
         }
 
-        // Host: próxima
         function nextQuestionHost(){
           const rid = room;
           if (!quiz || !rid) return;
           const next = qid + 1;
           const { state, answers, players } = roomRefs(rid);
           if (next >= total){
-            // fim para todos
             state.update({ started:false, qid: next, end:true, theme: selectedQuizKey });
             setScreen("end");
+            saveFinalScoreIfNeeded({ theme: selectedQuizKey, totalQ: total, ended: true });
             return;
           }
           state.set({ started:true, qid: next, correct: quiz.questions[next].c, theme: selectedQuizKey, end:false });
           answers(next).off();
           answers(next).on("child_added", (snap)=>{
-            const { choice } = snap.val()||{}; const pid = snap.key;
-            if (Number(choice) === Number(quiz.questions[next].c)) players.child(pid).child("points").transaction(p => (p||0)+1);
+            const { choice } = snap.val()||{}; const pidAns = snap.key;
+            if (Number(choice) === Number(quiz.questions[next].c)) players.child(pidAns).child("points").transaction(p => (p||0)+1);
           });
           setPicked(null);
         }
-        const isEnd = (s.end === true) || (typeof s.qid === "number" && totalQ > 0 && s.qid >= totalQ);
-        if (isEnd) {
-          setScreen("end");
-         // 🔥 salva pontuação do jogador autenticado
-          saveFinalScoreIfNeeded({ theme: key, totalQ, ended: true });
-}
-        // Jogador: responde
+
         function chooseAnswer(i){
           if (picked !== null) return;
           setPicked(i);
           if (!room || !started) return;
-          db.ref(`rooms/${room}/answers/${qid}/${playerId}`).set({ choice: i, at: Date.now() });
+          db.ref(`rooms/${room}/answers/${qid}/${pid}`).set({ choice: i, at: Date.now() });
         }
 
-        // Reset UI local
+        function saveFinalScoreIfNeeded({ theme, totalQ, ended }) {
+          if (!user || !room || !ended || savedOnceRef.current) return;
+          savedOnceRef.current = true;
+          const myPoints = (players.find(p => p.id === pid)?.points) || 0;
+          const payload = {
+            theme,
+            points: myPoints,
+            totalQuestions: totalQ,
+            room,
+            at: Date.now(),
+            displayName: user.displayName || name || "Jogador",
+            uid: user.uid
+          };
+          // histórico do usuário
+          db.ref(`users/${user.uid}/results`).push(payload);
+          // leaderboard por tema (melhor pontuação)
+          const lbRef = db.ref(`leaderboards/${theme}/${user.uid}`);
+          lbRef.transaction(curr => {
+            if (!curr || myPoints > (curr.points || 0)) {
+              return {
+                points: myPoints,
+                displayName: payload.displayName,
+                photoURL: user.photoURL || null,
+                uid: user.uid,
+                updatedAt: Date.now()
+              };
+            }
+            return curr;
+          });
+        }
+
         function resetUI(){ setScreen("waiting"); setSelectedQuizKey(null); setQid(0); setPicked(null); }
 
         return (
           <div className="p-6 flex items-center justify-center">
             <div className="w-full max-w-3xl">
               {/* Header */}
-             <div className="flex items-center justify-between mb-4 text-white/80">
-  <div className="text-sm tracking-wide">AR-KN Quiz • Firebase Multiplayer</div>
-  <div className="flex items-center gap-3">
-    <div className="text-xs">Sala: <span className="font-mono">{room || "—"}</span></div>
-    {user ? (
-      <div className="flex items-center gap-2">
-        {user.photoURL && <img src={user.photoURL} alt="avatar" className="w-6 h-6 rounded-full" />}
-        <span className="text-xs">{user.displayName || "Você"}</span>
-        <button onClick={signOutGoogle} className="text-xs underline hover:opacity-80">Sair</button>
-      </div>
-    ) : (
-      <button onClick={signInGoogle} className="text-xs underline hover:opacity-80">Entrar com Google</button>
-    )}
-  </div>
-</div>
+              <div className="flex items-center justify-between mb-4 text-white/80">
+                <div className="text-sm tracking-wide">AR-KN Quiz • Firebase Multiplayer</div>
+                <div className="flex items-center gap-3">
+                  <div className="text-xs">Sala: <span className="font-mono">{room || "—"}</span></div>
+                  {user ? (
+                    <div className="flex items-center gap-2">
+                      {user.photoURL && <img src={user.photoURL} alt="avatar" className="w-6 h-6 rounded-full" />}
+                      <span className="text-xs">{user.displayName || "Você"}</span>
+                      <button onClick={signOutGoogle} className="text-xs underline hover:opacity-80">Sair</button>
+                    </div>
+                  ) : (
+                    <button onClick={signInGoogle} className="text-xs underline hover:opacity-80">Entrar com Google</button>
+                  )}
+                </div>
+              </div>
 
               {screen === "lobby" && (
                 <Card className="text-center">
-                    <h1 className="text-4xl font-extrabold mb-2">Quiz Verso </h1>
-                  <p className="text-white/70 mb-8">Onde a Diversão é garantida e o aprendizado é contínuo!.</p>
+                  <h1 className="text-4xl font-extrabold mb-2">Quiz em Família!</h1>
+                  <p className="text-white/70 mb-8">Sem servidor. Cole sua config do Firebase acima e jogue.</p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                     <div>
@@ -319,14 +297,14 @@ function saveFinalScoreIfNeeded({ theme, totalQ, ended }) {
                       <Input value={name} onChange={(e)=>setName(e.target.value)} placeholder="Digite seu nome" />
                     </div>
                     <div>
-                      <div className="text-sm text-white/60 mb-1">Código da sala (Caso tenha)</div>
+                      <div className="text-sm text-white/60 mb-1">Código da sala (para entrar)</div>
                       <Input value={joinCode} onChange={(e)=>setJoinCode(e.target.value.toUpperCase())} placeholder="ABCD1" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala</Button>
-                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar em sala existente</Button>
+                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala (Host)</Button>
+                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar na Sala (Jogador)</Button>
                   </div>
 
                   <div className="mt-6 text-xs text-white/60">Dica: compartilhe o código <span className="font-mono">{gameCode}</span> com os amigos.</div>
@@ -472,5 +450,3 @@ function saveFinalScoreIfNeeded({ theme, totalQ, ended }) {
     </script>
   </body>
 </html>
-
-
