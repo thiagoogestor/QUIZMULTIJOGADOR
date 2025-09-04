@@ -121,7 +121,7 @@
           answers: (q) => db.ref(`rooms/${rid}/answers/${q}`),
         });
 
-        // Escutar players+state; puxa também o tema (quiz) do host
+        // Escutar players+state; puxa também o tema (quiz) do host e detecta fim de jogo
         function listenRoom(rid){
           const { players, state } = roomRefs(rid);
           players.on("value", (snap)=>{
@@ -132,12 +132,26 @@
           state.on("value", (snap)=>{
             const s = snap.val() || { started:false, qid:0 };
             const startedNow = !!s.started;
-            // ⚠️ chave: sincroniza o tema para todos os não-hosts
+
+            // sincroniza tema (necessário para quem não é host)
             if (s.theme) setSelectedQuizKey(s.theme);
+
+            // calcula total para detectar fim
+            const key = s.theme || selectedQuizKey;
+            const totalQ = key && QUIZZES[key] ? QUIZZES[key].questions.length : 0;
+
             setStarted(startedNow);
             setQid(s.qid|0);
             setPicked(null);
-            if (startedNow) setScreen("game");
+
+            if (startedNow) {
+              setScreen("game");
+            } else {
+              // fim de jogo quando host encerra
+              if (s.end === true || (typeof s.qid === "number" && totalQ > 0 && s.qid >= totalQ)) {
+                setScreen("end");
+              }
+            }
           });
         }
 
@@ -169,7 +183,7 @@
           if (!selectedQuizKey || !quiz) return;
           const rid = room || gameCode;
           const { state, answers, players } = roomRefs(rid);
-          state.set({ started:true, qid:0, correct: quiz.questions[0].c, theme: selectedQuizKey });
+          state.set({ started:true, qid:0, correct: quiz.questions[0].c, theme: selectedQuizKey, end:false });
           answers(0).off();
           answers(0).on("child_added", (snap)=>{
             const { choice } = snap.val()||{}; const pid = snap.key;
@@ -184,8 +198,13 @@
           if (!quiz || !rid) return;
           const next = qid + 1;
           const { state, answers, players } = roomRefs(rid);
-          if (next >= total){ state.update({ started:false, qid: next }); setScreen("end"); return; }
-          state.set({ started:true, qid: next, correct: quiz.questions[next].c, theme: selectedQuizKey });
+          if (next >= total){
+            // fim para todos
+            state.update({ started:false, qid: next, end:true, theme: selectedQuizKey });
+            setScreen("end");
+            return;
+          }
+          state.set({ started:true, qid: next, correct: quiz.questions[next].c, theme: selectedQuizKey, end:false });
           answers(next).off();
           answers(next).on("child_added", (snap)=>{
             const { choice } = snap.val()||{}; const pid = snap.key;
