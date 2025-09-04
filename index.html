@@ -49,13 +49,31 @@
 
       // 📚 DATASET DEMO (2 quizes)
       const QUIZZES = {
-        geral: {
-          name: "Conhecimentos Gerais",
-          questions: [
-            { q: "Qual é a capital do Brasil?", a: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], c: 2 },
-            { q: "Quem pintou a Mona Lisa?", a: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], c: 2 },
-          ],
-        },
+       "geral": {
+                name: "Conhecimentos Gerais",
+                questions: [
+                    { question: "Qual é a capital do Brasil?", answers: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], correct: 2 },
+                    { question: "Quem pintou a Mona Lisa?", answers: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2 },
+                    { question: "Qual o maior animal do mundo?", answers: ["Elefante", "Tubarão Baleia", "Baleia Azul", "Girafa"], correct: 2 },
+                    { question: "Quem escreveu 'Dom Quixote'?", answers: ["Machado de Assis", "Miguel de Cervantes", "Shakespeare", "Fernando Pessoa"], correct: 1 },
+                    { question: "Em que ano o homem pisou na Lua?", answers: ["1969", "1972", "1965", "1980"], correct: 0 },
+                    { question: "Qual é o rio mais longo do mundo?", answers: ["Rio Nilo", "Rio Amazonas", "Rio Mississipi", "Rio Yangtzé"], correct: 1 },
+                    { question: "Qual a montanha mais alta do mundo?", answers: ["Monte Everest", "K2", "Kangchenjunga", "Lhotse"], correct: 0 },
+                    { question: "Qual a fórmula química da água?", answers: ["CO2", "O2", "H2O2", "H2O"], correct: 3 },
+                    { question: "Qual país tem o formato de uma bota?", answers: ["Grécia", "Portugal", "Itália", "Espanha"], correct: 2},
+                    { question: "Quem foi o inventor da lâmpada?", answers: ["Nikola Tesla", "Thomas Edison", "Graham Bell", "Santos Dumont"], correct: 1},
+                    { question: "Qual a capital de Portugal?", answers: ["Madrid", "Porto", "Roma", "Lisboa"], correct: 3},
+                    { question: "Quem descobriu o Brasil?", answers: ["Cristóvão Colombo", "Vasco da Gama", "Pedro Álvares Cabral", "Américo Vespúcio"], correct: 2},
+                    { question: "Qual a moeda oficial do Japão?", answers: ["Yuan", "Won", "Iene", "Rupia"], correct: 2},
+                    { question: "Qual o nome do oceano que banha o Brasil?", answers: ["Pacífico", "Índico", "Atlântico", "Ártico"], correct: 2 },
+                    { question: "Qual o deserto mais quente do mundo?", answers: ["Saara", "Atacama", "Arábia", "Gobi"], correct: 0},
+                    { question: "Qual o plural de 'cidadão'?", answers: ["Cidadãos", "Cidadões", "Cidades", "Cidadãs"], correct: 0 },
+                    { question: "Em que continente fica o Egito?", answers: ["Ásia", "Europa", "África", "Oceania"], correct: 2 },
+                    { question: "Qual o coletivo de cães?", answers: ["Manada", "Cardume", "Alcateia", "Rebanho"], correct: 2 },
+                    { question: "Qual o ponto mais alto do Brasil?", answers: ["Pico da Neblina", "Pico 31 de Março", "Monte Roraima", "Pico da Bandeira"], correct: 0 },
+                    { question: "Quantos lados tem um heptágono?", answers: ["5", "6", "7", "8"], correct: 2 }
+                ]
+            },
         ciencia: {
           name: "Ciência e Tecnologia",
           questions: [
@@ -502,4 +520,5 @@
     </script>
   </body>
 </html>
+
 
