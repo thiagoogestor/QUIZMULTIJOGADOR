@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Quiz Multiplayer (Firebase • Login Google + Recorde por Quiz)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
       * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
       .pop-anim { animation: pop .35s ease-out; }
@@ -13,6 +15,46 @@
       @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-2px)} 40%{transform:translateX(2px)} 60%{transform:translateX(-2px)} 80%{transform:translateX(2px)} }
       .confetti-piece { position:absolute; top:-10px; border-radius:1px; opacity:.9; animation: confettiFall linear infinite; }
       @keyframes confettiFall { from{ transform: translateY(-10px) rotate(0deg); } to{ transform: translateY(110vh) rotate(360deg); } }
+    /* Tipografia e utilidades visuais para “cara de jogo” */
+body { font-family: 'Kanit', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial; }
+.gradient-title {
+  background: linear-gradient(90deg, #a78bfa, #60a5fa, #22d3ee);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 6px 28px rgba(99,102,241,.35);
+}
+.glass {
+  position: relative; background: rgba(15,23,42,.6);
+  border-radius: 18px; border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 20px 50px rgba(31,41,55,.45);
+}
+.glass::before {
+  content:""; position:absolute; inset:-1px; padding:1px; border-radius: inherit;
+  background: conic-gradient(from 180deg, #8b5cf6, #22d3ee, #f0abfc, #8b5cf6);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; opacity:.35; pointer-events:none;
+}
+.btn-neo { background: linear-gradient(180deg,#7c3aed,#4f46e5); box-shadow: 0 8px 30px rgba(99,102,241,.45); }
+.btn-neo:hover { filter: brightness(1.05); }
+.btn-ghost { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); }
+.input-ghost { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); }
+.bg-grid {
+  background-image:
+    radial-gradient(1200px 600px at 20% 0%, rgba(99,102,241,.25), rgba(0,0,0,0) 60%),
+    radial-gradient(1000px 500px at 100% 100%, rgba(236,72,153,.2), rgba(0,0,0,0) 55%),
+    linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+  background-size: auto, auto, 36px 36px, 36px 36px;
+  background-position: 0 0, 0 0, 0 0, 0 0;
+}
+@keyframes floaty { 0%{transform:translateY(0)} 50%{transform:translateY(-6px)} 100%{transform:translateY(0)} }
+.floating { animation: floaty 4s ease-in-out infinite; }
+.shine { position:absolute; inset:0; border-radius:inherit; overflow:hidden; pointer-events:none; }
+.shine::before {
+  content:""; position:absolute; inset:-40%;
+  background: conic-gradient(from 0deg, transparent 0 20%, rgba(255,255,255,.15) 35%, transparent 50% 100%);
+  animation: spin 6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(1turn); } }
     </style>
 
     <!-- React UMD + Babel (no-build) -->
@@ -173,8 +215,20 @@
           </div>
         );
       }
+      function BackdropFX() {
+  return (
+    <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-br from-slate-900 via-indigo-950 to-fuchsia-900 bg-grid">
+      {/* manchas de luz */}
+      <div className="absolute -top-12 -left-12 w-72 h-72 rounded-full blur-3xl opacity-20"
+           style={{background: 'radial-gradient(circle at 30% 30%, #8b5cf6, transparent 60%)'}} />
+      <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-20 floating"
+           style={{background: 'radial-gradient(circle at 70% 70%, #22d3ee, transparent 60%)'}} />
+    </div>
+  );
+}
 
       function App() {
+        
         const [screen, setScreen] = useState("lobby");
         const [name, setName] = useState("");
         const [isHost, setIsHost] = useState(true);
@@ -426,6 +480,7 @@
 
         return (
           <div className="p-6 flex items-center justify-center">
+             <BackdropFX />
             <div className="w-full max-w-3xl">
               {/* Header */}
               <div className="flex items-center justify-between mb-4 text-white/80">
@@ -444,29 +499,75 @@
               </div>
 
               {screen === "lobby" && (
-                <Card className="text-center">
-                  <h1 className="text-4xl font-extrabold mb-2">QuizVerso</h1>
-                  <p className="text-white/70 mb-8">Jogo é jogado, Lambarí é pescado.</p>
+  <div className="glass p-8 md:p-10 w-full max-w-3xl relative">
+    <div className="shine" />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                    <div>
-                      <div className="text-sm text-white/60 mb-1">Seu nome</div>
-                      <Input value={name} onChange={(e)=>setName(e.target.value)} placeholder="Digite seu nome" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-white/60 mb-1">Código da sala (Caso tenha)</div>
-                      <Input value={joinCode} onChange={(e)=>setJoinCode(e.target.value.toUpperCase())} placeholder="ABCD1" />
-                    </div>
-                  </div>
+    {/* LOGO / TÍTULO */}
+    <div className="text-center mb-6">
+      <div className="inline-flex items-center gap-3">
+        <span className="w-10 h-10 grid place-items-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-800/40 floating">?</span>
+        <h1 className="text-4xl md:text-5xl font-extrabold gradient-title tracking-tight">QuizVerso</h1>
+      </div>
+      <p className="text-white/70 mt-2">Jogo é jogado. Lambarí é pescado.</p>
+    </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala</Button>
-                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar na Sala</Button>
-                  </div>
+    {/* FORM */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+      <div>
+        <div className="text-sm text-white/70 mb-1">Seu nome</div>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60">👤</span>
+          <input
+            className="input-ghost text-white w-full pl-9 pr-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-400/40 placeholder:text-white/50"
+            value={name}
+            onChange={(e)=>setName(e.target.value)}
+            placeholder="Digite seu nome"
+          />
+        </div>
+      </div>
+      <div>
+        <div className="text-sm text-white/70 mb-1">Código da sala (se tiver)</div>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60">🔑</span>
+          <input
+            className="input-ghost text-white w-full pl-9 pr-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-cyan-400/30 placeholder:text-white/50"
+            value={joinCode}
+            onChange={(e)=>setJoinCode(e.target.value.toUpperCase())}
+            placeholder="ABCD1"
+          />
+        </div>
+      </div>
+    </div>
 
-                  <div className="mt-6 text-xs text-white/60">Dica: compartilhe o código <span className="font-mono">{gameCode}</span> com os amigos.</div>
-                </Card>
-              )}
+    {/* AÇÕES */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
+      <button
+        onClick={handleCreate}
+        className="btn-neo w-full px-5 py-3 rounded-full font-semibold text-white inline-flex items-center justify-center gap-2"
+      >
+        <span>🚀</span> Criar Nova Sala
+      </button>
+
+      <button
+        onClick={handleJoin}
+        className="btn-ghost w-full px-5 py-3 rounded-full font-semibold text-white inline-flex items-center justify-center gap-2 hover:bg-white/15"
+      >
+        <span>🎮</span> Entrar na Sala
+      </button>
+    </div>
+
+    <div className="mt-5 text-center text-xs text-white/70">
+      Dica: compartilhe o código <span className="font-mono text-white">{gameCode}</span> com os amigos.
+    </div>
+
+    <div className="mt-6 grid grid-cols-3 gap-3 text-xs text-white/60">
+      <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 text-center">💡 Multiplayer em tempo real</div>
+      <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 text-center">🏆 Recorde por quiz</div>
+      <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 text-center">🔒 Login Google</div>
+    </div>
+  </div>
+)}
+
 
               {screen === "waiting" && (
                 <Card>
@@ -627,5 +728,6 @@
     </script>
   </body>
 </html>
+
 
 
