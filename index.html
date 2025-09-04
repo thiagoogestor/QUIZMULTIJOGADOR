@@ -45,336 +45,486 @@
       const db = firebase.database();
 
       // 📚 DATASET DEMO (2 quizes)
-      const QUIZZES = {
-        geral: {
-          name: "Conhecimentos Gerais",
-          questions: [
-            { q: "Qual é a capital do Brasil?", a: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], c: 2 },
-            { q: "Quem pintou a Mona Lisa?", a: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], c: 2 },
-          ],
-        },
-        ciencia: {
-          name: "Ciência e Tecnologia",
-          questions: [
-            { q: "Qual planeta é conhecido como 'Planeta Vermelho'?", a: ["Vênus", "Marte", "Júpiter", "Saturno"], c: 1 },
-            { q: "Quem desenvolveu a teoria da relatividade?", a: ["Newton", "Galileu", "Einstein", "Tesla"], c: 2 },
-          ],
-        },
+const QUIZZES = {
+  geral: {
+    name: "Conhecimentos Gerais",
+    questions: [
+      { q: "Qual é a capital do Brasil?", a: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], c: 2 },
+      { q: "Quem pintou a Mona Lisa?", a: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], c: 2 },
+    ],
+  },
+  ciencia: {
+    name: "Ciência e Tecnologia",
+    questions: [
+      { q: "Qual planeta é conhecido como 'Planeta Vermelho'?", a: ["Vênus", "Marte", "Júpiter", "Saturno"], c: 1 },
+      { q: "Quem desenvolveu a teoria da relatividade?", a: ["Newton", "Galileu", "Einstein", "Tesla"], c: 2 },
+    ],
+  },
+};
+
+function Card({ children, className = "" }) {
+  return <div className={`bg-white rounded-xl shadow-xl p-6 ${className}`}>{children}</div>;
+}
+
+function Button({ children, variant = "primary", className = "", ...props }) {
+  const base = "inline-flex items-center justify-center w-full font-semibold px-4 py-3 rounded-lg transition";
+  const styles =
+    variant === "primary"
+      ? "bg-indigo-600 text-white hover:bg-indigo-700"
+      : variant === "secondary"
+      ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+      : "bg-gray-100 text-gray-800 hover:bg-gray-200";
+  return (
+    <button className={`${base} ${styles} ${className}`} {...props}>
+      {children}
+    </button>
+  );
+}
+
+function Input({ className = "", ...props }) {
+  return (
+    <input
+      className={`block w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 focus:outline-none focus:ring-4 focus:ring-indigo-200 ${className}`}
+      {...props}
+    />
+  );
+}
+
+// 🎉 Confete simples, sem bibliotecas externas
+function Confetti({ count = 80 }) {
+  return (
+    <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
+      {Array.from({ length: count }).map((_, i) => {
+        const left = Math.random() * 100;
+        const size = 6 + Math.random() * 8;
+        const delay = Math.random() * 2;
+        const duration = 4 + Math.random() * 3;
+        const hue = Math.floor(Math.random() * 360);
+        const style = {
+          left: `${left}%`,
+          width: `${size}px`,
+          height: `${size}px`,
+          background: `hsl(${hue} 80% 60%)`,
+          animationDelay: `${delay}s`,
+          animationDuration: `${duration}s`,
+        };
+        return <span key={i} className="confetti-piece" style={style} />;
+      })}
+    </div>
+  );
+}
+
+export default function QuizPreview() {
+  const [screen, setScreen] = useState("lobby");
+  const [name, setName] = useState("");
+  const [isHost, setIsHost] = useState(true);
+  const [gameCode, setGameCode] = useState(() => Math.random().toString(36).slice(2, 7).toUpperCase());
+  const [selectedQuizKey, setSelectedQuizKey] = useState(null);
+  const [dark, setDark] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  // Multiplayer state
+  const [serverUrl, setServerUrl] = useState("ws://localhost:3001");
+  const wsRef = useRef(null);
+  const [connected, setConnected] = useState(false);
+  const [playerId, setPlayerId] = useState(null);
+  const [players, setPlayers] = useState([]); // [{id,name,points}]
+  const [started, setStarted] = useState(false);
+  const [room, setRoom] = useState("");
+
+  // Game state (cliente)
+  const [qid, setQid] = useState(0);
+  const [picked, setPicked] = useState(null);
+  const [score, setScore] = useState(0); // usado apenas no fallback local
+  const [showBoard, setShowBoard] = useState(false);
+
+  const quiz = selectedQuizKey ? QUIZZES[selectedQuizKey] : null;
+  const total = quiz?.questions.length ?? 0;
+  const current = quiz?.questions[qid];
+  const pct = total ? Math.round(((qid + 1) / total) * 100) : 0;
+
+  // === UI helpers ===
+  const LETTERS = ["A", "B", "C", "D", "E", "F"];
+
+  // Copiar código da sala
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(gameCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  }
+
+  // Conectar WS
+  function connectWS(role, nextRoom) {
+    try {
+      const url = new URL(serverUrl);
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+      ws.onopen = () => {
+        setConnected(true);
+        const hello = { type: "hello", role, room: nextRoom, name };
+        ws.send(JSON.stringify(hello));
       };
-
-      function Card({ children, className = "" }) {
-        return <div className={`bg-white/10 backdrop-blur-xl border border-white/10 text-white rounded-xl shadow-xl p-6 ${className}`}>{children}</div>;
-      }
-      function Button({ children, variant = "primary", className = "", ...props }) {
-        const base = "inline-flex items-center justify-center w-full font-semibold px-4 py-3 rounded-lg transition";
-        const styles = variant === "primary" ? "bg-indigo-600 text-white hover:bg-indigo-700"
-          : variant === "secondary" ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-slate-900"
-          : "bg-gray-100 text-gray-800 hover:bg-gray-200";
-        return <button className={`${base} ${styles} ${className}`} {...props}>{children}</button>;
-      }
-      function Input({ className = "", ...props }) {
-        return <input className={`block w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder:text-white/50 border border-white/20 focus:outline-none focus:ring-4 focus:ring-indigo-300 ${className}`} {...props} />;
-      }
-      function Confetti({ count = 80 }) {
-        return (
-          <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
-            {Array.from({ length: count }).map((_, i) => {
-              const left = Math.random() * 100;
-              const size = 6 + Math.random() * 8;
-              const delay = Math.random() * 2;
-              const duration = 4 + Math.random() * 3;
-              const hue = Math.floor(Math.random() * 360);
-              const style = { left: `${left}%`, width: `${size}px`, height: `${size}px`, background: `hsl(${hue} 80% 60%)`, animationDelay: `${delay}s`, animationDuration: `${duration}s` };
-              return <span key={i} className="confetti-piece" style={style} />;
-            })}
-          </div>
-        );
-      }
-
-      function App() {
-        const [screen, setScreen] = useState("lobby");
-        const [name, setName] = useState("");
-        const [isHost, setIsHost] = useState(true);
-        const [gameCode, setGameCode] = useState(() => Math.random().toString(36).slice(2,7).toUpperCase());
-        const [selectedQuizKey, setSelectedQuizKey] = useState(null);
-        const [copied, setCopied] = useState(false);
-
-        const [playerId] = useState(() => Math.random().toString(36).slice(2,10));
-        const [room, setRoom] = useState("");
-        const [players, setPlayers] = useState([]);
-        const [qid, setQid] = useState(0);
-        const [picked, setPicked] = useState(null);
-        const [started, setStarted] = useState(false);
-        const [joinCode, setJoinCode] = useState("");
-
-        const quiz = selectedQuizKey ? QUIZZES[selectedQuizKey] : null;
-        const total = quiz?.questions.length ?? 0;
-        const current = quiz?.questions[qid];
-        const pct = total ? Math.round(((qid + 1) / total) * 100) : 0;
-
-        async function copyCode() { try { await navigator.clipboard.writeText(room || gameCode); setCopied(true); setTimeout(()=>setCopied(false),1500); } catch {} }
-
-        // helpers de referência da sala no Realtime DB
-        const roomRefs = (rid) => ({
-          players: db.ref(`rooms/${rid}/players`),
-          state:   db.ref(`rooms/${rid}/state`),
-          answers: (q) => db.ref(`rooms/${rid}/answers/${q}`),
-        });
-
-        // Escutar players+state; puxa também o tema (quiz) do host
-        function listenRoom(rid){
-          const { players, state } = roomRefs(rid);
-          players.on("value", (snap)=>{
-            const val = snap.val() || {};
-            const arr = Object.entries(val).map(([id,p])=>({ id, name:p.name, points:p.points|0 }));
-            setPlayers(arr);
-          });
-          state.on("value", (snap)=>{
-            const s = snap.val() || { started:false, qid:0 };
-            const startedNow = !!s.started;
-            // ⚠️ chave: sincroniza o tema para todos os não-hosts
-            if (s.theme) setSelectedQuizKey(s.theme);
+      ws.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg.type === "welcome") {
+            setPlayerId(msg.playerId);
+            setRoom(msg.room);
+          } else if (msg.type === "players_update") {
+            setPlayers(msg.players);
+          } else if (msg.type === "game_state") {
+            // sincroniza tema + estado e empurra a UI
+            if (msg.theme) setSelectedQuizKey(msg.theme);
+            const startedNow = !!msg.started;
             setStarted(startedNow);
-            setQid(s.qid|0);
-            setPicked(null);
-            if (startedNow) setScreen("game");
-          });
-        }
+            setQid(msg.qid ?? 0);
+            if (startedNow) {
+              setScreen("game");
+            } else {
+              // se o host encerrou (fim de jogo), mostrar tela final
+              const key = msg.theme || selectedQuizKey;
+              const total = key && QUIZZES[key] ? QUIZZES[key].questions.length : null;
+              if (msg.end === true || (typeof msg.qid === "number" && total !== null && msg.qid >= total)) {
+                setScreen("end");
+              }
+            }
+          }
+        } catch {}
+      };
+      ws.onclose = () => {
+        setConnected(false);
+        wsRef.current = null;
+      };
+    } catch (e) {
+      alert("Não consegui conectar ao servidor WS. Verifique a URL.");
+    }
+  }
 
-        // Host: cria sala
-        function handleCreate(){
-          if (!name.trim()) return alert("Digite seu nome");
-          const rid = gameCode;
-          const { players } = roomRefs(rid);
-          players.child(playerId).set({ name, points:0 });
-          players.child(playerId).onDisconnect().remove();
-          setRoom(rid); setIsHost(true); setScreen("waiting");
-          listenRoom(rid);
-        }
+  // Enviar helper
+  function send(obj) {
+    const ws = wsRef.current;
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj));
+  }
 
-        // Jogador: entra em sala
-        function handleJoin(){
-          if (!name.trim()) return alert("Digite seu nome");
-          if (!joinCode.trim()) return alert("Digite o código da sala");
-          const rid = joinCode.trim().toUpperCase();
-          const { players } = roomRefs(rid);
-          players.child(playerId).set({ name, points:0 });
-          players.child(playerId).onDisconnect().remove();
-          setRoom(rid); setIsHost(false); setScreen("waiting");
-          listenRoom(rid);
-        }
+  // Ações Lobby
+  function handleCreate() {
+    if (!name.trim()) return alert("Digite seu nome");
+    // use gameCode como room
+    connectWS("host", gameCode);
+    setIsHost(true);
+    setScreen("waiting");
+  }
 
-        // Host: inicia
-        function startGameHost(){
-          if (!selectedQuizKey || !quiz) return;
-          const rid = room || gameCode;
-          const { state, answers, players } = roomRefs(rid);
-          state.set({ started:true, qid:0, correct: quiz.questions[0].c, theme: selectedQuizKey });
-          answers(0).off();
-          answers(0).on("child_added", (snap)=>{
-            const { choice } = snap.val()||{}; const pid = snap.key;
-            if (Number(choice) === Number(quiz.questions[0].c)) players.child(pid).child("points").transaction(p => (p||0)+1);
-          });
-          setScreen("game");
-        }
+  const [joinCode, setJoinCode] = useState("");
+  function handleJoin() {
+    if (!name.trim()) return alert("Digite seu nome");
+    if (!joinCode.trim()) return alert("Digite o código da sala");
+    connectWS("player", joinCode.trim().toUpperCase());
+    setIsHost(false);
+    setScreen("waiting");
+  }
 
-        // Host: próxima
-        function nextQuestionHost(){
-          const rid = room;
-          if (!quiz || !rid) return;
-          const next = qid + 1;
-          const { state, answers, players } = roomRefs(rid);
-          if (next >= total){ state.update({ started:false, qid: next }); setScreen("end"); return; }
-          state.set({ started:true, qid: next, correct: quiz.questions[next].c, theme: selectedQuizKey });
-          answers(next).off();
-          answers(next).on("child_added", (snap)=>{
-            const { choice } = snap.val()||{}; const pid = snap.key;
-            if (Number(choice) === Number(quiz.questions[next].c)) players.child(pid).child("points").transaction(p => (p||0)+1);
-          });
-          setPicked(null);
-        }
+  // Host escolhe quiz e inicia
+  function startGame() {
+    if (!selectedQuizKey || !quiz) return;
+    setScreen("game");
+    setStarted(true);
+    setQid(0);
+    // o host informa ao servidor qual é a pergunta atual e o índice correto
+    send({ type: "host_set_question", room: room || gameCode, qid: 0, correct: quiz.questions[0].c, started: true, theme: selectedQuizKey });
+  }
 
-        // Jogador: responde
-        function chooseAnswer(i){
-          if (picked !== null) return;
-          setPicked(i);
-          if (!room || !started) return;
-          db.ref(`rooms/${room}/answers/${qid}/${playerId}`).set({ choice: i, at: Date.now() });
-        }
+  // Próxima pergunta (host)
+  function nextQuestionHost() {
+    if (!quiz) return;
+    const next = qid + 1;
+    if (next >= total) {
+      setScreen("end");
+      send({ type: "game_state", room: room || gameCode, started: false, qid: next, end: true, theme: selectedQuizKey });
+      return;
+    }
+    setQid(next);
+    setPicked(null);
+    send({ type: "host_set_question", room: room || gameCode, qid: next, correct: quiz.questions[next].c, started: true, theme: selectedQuizKey });
+  }
 
-        // Reset UI local
-        function resetUI(){ setScreen("waiting"); setSelectedQuizKey(null); setQid(0); setPicked(null); }
+  // Jogador responde
+  function chooseAnswer(i) {
+    if (picked !== null) return;
+    setPicked(i);
 
-        return (
-          <div className="p-6 flex items-center justify-center">
-            <div className="w-full max-w-3xl">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-4 text-white/80">
-                <div className="text-sm tracking-wide">AR-KN Quiz • Firebase Multiplayer</div>
-                <div className="text-xs">Sala: <span className="font-mono">{room || "—"}</span></div>
+    if (connected) {
+      // multiplayer: servidor calcula pontuação e atualiza ranking
+      send({ type: "answer", room: room || gameCode, playerId, qid, choice: i });
+    } else {
+      // fallback local
+      if (i === current.c) setScore((s) => s + 1);
+    }
+  }
+
+  // Fallback local para avançar
+  function nextQuestionLocal() {
+    if (!quiz) return;
+    const next = qid + 1;
+    if (next >= total) { setScreen("end"); return; }
+    setQid(next); setPicked(null);
+  }
+
+  // Reset geral
+  function resetGame() {
+    setScreen("waiting");
+    setSelectedQuizKey(null);
+    setQid(0);
+    setPicked(null);
+    setScore(0);
+  }
+
+  return (
+    <div className={`${dark ? "dark" : ""}`}>
+      {/* estilos auxiliares para animações e confete */}
+      <style>{`
+        .pop-anim { animation: pop .35s ease-out; }
+        @keyframes pop { 0%{transform:scale(.96)} 50%{transform:scale(1.03)} 100%{transform:scale(1)} }
+        .shake-anim { animation: shake .3s ease-in-out; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-2px)} 40%{transform:translateX(2px)} 60%{transform:translateX(-2px)} 80%{transform:translateX(2px)} }
+        .confetti-piece { position:absolute; top:-10px; border-radius:1px; opacity:.9; animation: confettiFall linear infinite; }
+        @keyframes confettiFall { from{ transform: translateY(-10px) rotate(0deg); } to{ transform: translateY(110vh) rotate(360deg); } }
+      `}</style>
+
+      <div className="min-h-screen p-6 flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-fuchsia-900 dark:from-slate-950 dark:via-indigo-950 dark:to-black transition-colors">
+        <div className="w-full max-w-3xl">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-white/80 text-sm tracking-wide">AR-KN Quiz • Multiplayer Preview</div>
+            <div className="flex items-center gap-2">
+              <input value={serverUrl} onChange={(e)=>setServerUrl(e.target.value)} placeholder="ws://localhost:3001" className="text-xs px-2 py-1 rounded border border-white/20 bg-white/10 text-white placeholder:text-white/40 w-[200px]" />
+              <button onClick={() => setDark((d)=>!d)} className="text-white/80 text-xs px-3 py-1 rounded-full border border-white/20 hover:bg-white/10">
+                {dark ? "🌙 Dark" : "☀️ Light"}
+              </button>
+            </div>
+          </div>
+
+          {screen === "lobby" && (
+            <Card className="text-center bg-white/10 backdrop-blur-xl border border-white/10 text-white">
+              <h1 className="text-4xl font-extrabold mb-2">Quiz em Família!</h1>
+              <p className="text-white/70 mb-8">Crie uma sala (host) ou entre (jogador) e joguem pelo celular.</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                <div>
+                  <div className="text-sm text-white/60 mb-1">Seu nome</div>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Digite seu nome" className="bg-white/10 border-white/20 text-white placeholder:text-white/50" />
+                </div>
+                <div>
+                  <div className="text-sm text-white/60 mb-1">Código da sala (para entrar)</div>
+                  <Input value={joinCode} onChange={(e)=>setJoinCode(e.target.value.toUpperCase())} placeholder="ABCD1" className="bg-white/10 border-white/20 text-white placeholder:text-white/50" />
+                </div>
               </div>
 
-              {screen === "lobby" && (
-                <Card className="text-center">
-                  <h1 className="text-4xl font-extrabold mb-2">Quiz em Família!</h1>
-                  <p className="text-white/70 mb-8">Sem servidor. Cole sua config do Firebase acima e jogue.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala (Host)</Button>
+                <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar na Sala (Jogador)</Button>
+              </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                    <div>
-                      <div className="text-sm text-white/60 mb-1">Seu nome</div>
-                      <Input value={name} onChange={(e)=>setName(e.target.value)} placeholder="Digite seu nome" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-white/60 mb-1">Código da sala (para entrar)</div>
-                      <Input value={joinCode} onChange={(e)=>setJoinCode(e.target.value.toUpperCase())} placeholder="ABCD1" />
-                    </div>
+              <div className="mt-6 text-xs text-white/50">Servidor: <span className="text-white/70">{serverUrl}</span></div>
+            </Card>
+          )}
+
+          {screen === "waiting" && (
+            <Card className="bg-white/10 backdrop-blur-xl border border-white/10 text-white">
+              <h2 className="text-2xl font-bold mb-2">Sala de Espera</h2>
+              <p className="text-white/70 mb-4">Compartilhe o código com os amigos e aguarde.</p>
+              <div onClick={copyCode} className="relative border-2 border-dashed border-white/30 rounded-lg p-4 text-center text-xl font-bold select-none cursor-pointer active:scale-[.99]">
+                {room || gameCode}
+                {copied && (
+                  <span className="absolute -top-3 right-3 bg-emerald-500 text-white text-xs px-2 py-1 rounded-full shadow">Copiado!</span>
+                )}
+              </div>
+              <p className="text-sm text-white/60 mt-2 text-center">Clique no código para copiar</p>
+
+              <h3 className="text-xl font-semibold mt-6 mb-2">Jogadores na Sala:</h3>
+              <ul className="space-y-2">
+                {players.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
+                    <span className="font-medium">{p.name}</span>
+                    <span className="text-sm text-white/60">{p.points} pts</span>
+                  </li>
+                ))}
+              </ul>
+
+              {isHost ? (
+                <div className="mt-6">
+                  <h3 className="text-xl font-semibold mb-2">Escolha o Tema do Quiz:</h3>
+                  <div className="grid grid-cols-1 gap-2 mb-4">
+                    {Object.entries(QUIZZES).map(([key, q]) => (
+                      <button
+                        key={key}
+                        onClick={() => setSelectedQuizKey(key)}
+                        className={`text-left px-4 py-3 rounded-xl border transition transform ${
+                          selectedQuizKey === key
+                            ? "bg-indigo-600/90 text-white border-indigo-400 shadow-lg scale-[1.01]"
+                            : "bg-white/5 text-white/90 hover:bg-white/10 border-white/10"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="font-semibold">{q.name}</div>
+                          <div className="text-xs opacity-75">{q.questions.length} questões</div>
+                        </div>
+                      </button>
+                    ))}
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala (Host)</Button>
-                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar na Sala (Jogador)</Button>
-                  </div>
-
-                  <div className="mt-6 text-xs text-white/60">Dica: compartilhe o código <span className="font-mono">{gameCode}</span> com os amigos.</div>
-                </Card>
+                  <Button onClick={startGame} disabled={!selectedQuizKey || !connected} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Começar o Jogo!</Button>
+                </div>
+              ) : (
+                <p className="mt-6 text-center font-semibold text-white/70">Aguardando o anfitrião começar...</p>
               )}
+            </Card>
+          )}
 
-              {screen === "waiting" && (
-                <Card>
-                  <h2 className="text-2xl font-bold mb-2">Sala de Espera</h2>
-                  <p className="text-white/70 mb-4">Compartilhe o código e aguarde os jogadores entrarem.</p>
-                  <div onClick={copyCode} className="relative border-2 border-dashed border-white/30 rounded-lg p-4 text-center text-xl font-bold select-none cursor-pointer active:scale-[.99]">
-                    {room || gameCode}
-                    {copied && (<span className="absolute -top-3 right-3 bg-emerald-500 text-white text-xs px-2 py-1 rounded-full shadow">Copiado!</span>)}
+          {screen === "game" && (
+            <Card className="bg-white/10 backdrop-blur-xl border border-white/10 text-white">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="text-sm font-medium text-white/60">{quiz?.name}</div>
+                  <div className="text-lg font-bold">
+                    Pergunta <span>{qid + 1}</span>/<span>{total}</span>
                   </div>
-                  <p className="text-sm text-white/60 mt-2 text-center">Clique no código para copiar</p>
+                </div>
+                <button className="font-semibold text-indigo-300 hover:text-indigo-200" onClick={() => setShowBoard(true)}>Ver Pontuação</button>
+              </div>
 
-                  <h3 className="text-xl font-semibold mt-6 mb-2">Jogadores na Sala:</h3>
-                  <ul className="space-y-2">
-                    {players.map((p) => (
-                      <li key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
-                        <span className="font-medium">{p.name}</span>
+              {/* Pergunta */}
+              <div className="mb-4 text-xl font-semibold">{current?.q}</div>
+
+              {/* Respostas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {current?.a.map((alt, i) => {
+                  const isPicked = picked === i;
+                  const isCorrect = picked !== null && i === current.c;
+                  const base = "px-4 py-3 rounded-xl border text-left transition transform";
+                  const state =
+                    picked === null
+                      ? "bg-white/5 hover:bg-white/10 hover:scale-[1.01] border-white/10"
+                      : isCorrect
+                      ? "bg-emerald-500/20 border-emerald-400"
+                      : isPicked
+                      ? "bg-rose-500/20 border-rose-400"
+                      : "bg-white/5 opacity-60 border-white/10";
+                  const motion = isCorrect ? "pop-anim" : isPicked && !isCorrect ? "shake-anim" : "";
+                  return (
+                    <button key={i} className={`${base} ${state} ${motion}`} onClick={() => chooseAnswer(i)}>
+                      <div className="flex items-center gap-3">
+                        <span className={`shrink-0 w-8 h-8 grid place-items-center rounded-full text-sm font-bold ${
+                          picked === null
+                            ? "bg-white/10 text-white/80"
+                            : isCorrect
+                            ? "bg-emerald-500 text-white"
+                            : isPicked
+                            ? "bg-rose-500 text-white"
+                            : "bg-white/10 text-white/60"
+                        }`}>
+                          {LETTERS[i]}
+                        </span>
+                        <span className="flex-1">{alt}</span>
+                        {picked !== null && (
+                          <span className="text-lg">
+                            {isCorrect ? "✅" : isPicked ? "❌" : ""}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Ranking ao vivo */}
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold mb-2">Ranking (ao vivo)</h4>
+                <ul className="space-y-2">
+                  {(connected ? players : [{ id: "1", name: name || "Você", points: score }])
+                    .slice()
+                    .sort((a,b)=> b.points - a.points)
+                    .map((p, i) => (
+                      <li key={p.id + i} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 text-center font-bold">{i+1}</span>
+                          <span className="font-medium">{p.name}</span>
+                        </div>
                         <span className="text-sm text-white/70">{p.points} pts</span>
                       </li>
                     ))}
-                  </ul>
+                </ul>
+              </div>
 
-                  {isHost ? (
-                    <div className="mt-6">
-                      <h3 className="text-xl font-semibold mb-2">Escolha o Tema do Quiz:</h3>
-                      <div className="grid grid-cols-1 gap-2 mb-4">
-                        {Object.entries(QUIZZES).map(([key, q]) => (
-                          <button key={key} onClick={() => setSelectedQuizKey(key)}
-                            className={`text-left px-4 py-3 rounded-xl border transition transform ${selectedQuizKey === key ? "bg-indigo-600/90 text-white border-indigo-400 shadow-lg scale-[1.01]" : "bg-white/5 text-white/90 hover:bg-white/10 border-white/10"}`}>
-                            <div className="flex items-center justify-between">
-                              <div className="font-semibold">{q.name}</div>
-                              <div className="text-xs opacity-75">{q.questions.length} questões</div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                      <Button onClick={startGameHost} disabled={!selectedQuizKey} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Começar o Jogo!</Button>
-                    </div>
-                  ) : (
-                    <p className="mt-6 text-center font-semibold text-white/70">Aguardando o anfitrião começar...</p>
-                  )}
-                </Card>
-              )}
+              {/* Barra de progresso */}
+              <div className="mt-6">
+                <div className="relative w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-2 bg-indigo-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                </div>
+                <div className="text-xs text-white/60 mt-1">Progresso: {pct}%</div>
+              </div>
 
-              {screen === "game" && (
-                <Card>
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div className="text-sm font-medium text-white/60">{quiz?.name}</div>
-                      <div className="text-lg font-bold">Pergunta <span>{qid + 1}</span>/<span>{total}</span></div>
-                    </div>
-                  </div>
+              {/* Próxima (host) / Local fallback */}
+              <div className="mt-6 text-center">
+                {connected && isHost ? (
+                  <Button onClick={nextQuestionHost} disabled={picked === null} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Próxima Pergunta (Host)</Button>
+                ) : !connected ? (
+                  <Button onClick={nextQuestionLocal} disabled={picked === null} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Próxima Pergunta</Button>
+                ) : null}
+              </div>
+            </Card>
+          )}
 
-                  <div className="mb-4 text-xl font-semibold">{current?.q || "Carregando pergunta..."}</div>
+          {screen === "end" && (
+            <>
+              <Confetti count={100} />
+              <Card className="text-center bg-white/10 backdrop-blur-xl border border-white/10 text-white relative z-10">
+                <h1 className="text-4xl font-extrabold mb-2">Fim de Jogo!</h1>
+                <h2 className="text-2xl font-semibold text-indigo-200 mb-6">
+                  O grande vencedor é... <span className="text-3xl text-white">{(connected ? players : [{name: name || "Você", points: score}]).slice().sort((a,b)=>b.points-a.points)[0].name}</span>!
+                </h2>
+                <h3 className="text-xl font-semibold mt-4 mb-2">Placar Final:</h3>
+                <ul className="space-y-2 max-w-md mx-auto">
+                  {(connected ? players : [{ id: "1", name: name || "Você", points: score }])
+                    .slice()
+                    .sort((a,b)=> b.points - a.points)
+                    .map((p, i) => (
+                      <li key={p.id + i} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
+                        <span className="font-medium">{i + 1}. {p.name}</span>
+                        <span className="text-sm text-white/70">{p.points} pts</span>
+                      </li>
+                    ))}
+                </ul>
+                <div className="mt-6">
+                  <Button onClick={resetGame} className="rounded-full">Jogar Novamente</Button>
+                </div>
+              </Card>
+            </>
+          )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {current?.a?.map((alt, i) => {
-                      const isPicked = picked === i;
-                      const isCorrect = picked !== null && i === current.c;
-                      const base = "px-4 py-3 rounded-xl border text-left transition transform";
-                      const state = picked === null ? "bg-white/5 hover:bg-white/10 hover:scale-[1.01] border-white/10"
-                        : isCorrect ? "bg-emerald-500/20 border-emerald-400"
-                        : isPicked ? "bg-rose-500/20 border-rose-400" : "bg-white/5 opacity-60 border-white/10";
-                      const motion = isCorrect ? "pop-anim" : isPicked && !isCorrect ? "shake-anim" : "";
-                      return (
-                        <button key={i} className={`${base} ${state} ${motion}`} onClick={() => chooseAnswer(i)}>
-                          <div className="flex items-center gap-3">
-                            <span className={`shrink-0 w-8 h-8 grid place-items-center rounded-full text-sm font-bold ${picked === null ? "bg-white/10 text-white/80" : isCorrect ? "bg-emerald-500 text-white" : isPicked ? "bg-rose-500 text-white" : "bg-white/10 text-white/60"}`}>
-                              {["A","B","C","D","E","F"][i]}
-                            </span>
-                            <span className="flex-1">{alt}</span>
-                            {picked !== null && (<span className="text-lg">{isCorrect ? "✅" : isPicked ? "❌" : ""}</span>)}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-6">
-                    <h4 className="text-lg font-semibold mb-2">Ranking (ao vivo)</h4>
-                    <ul className="space-y-2">
-                      {players.slice().sort((a,b)=> b.points - a.points).map((p, i) => (
-                        <li key={p.id + i} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
-                          <div className="flex items-center gap-3">
-                            <span className="w-6 text-center font-bold">{i+1}</span>
-                            <span className="font-medium">{p.name}</span>
-                          </div>
-                          <span className="text-sm text-white/70">{p.points} pts</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="mt-6">
-                    <div className="relative w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-2 bg-indigo-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                    </div>
-                    <div className="text-xs text-white/60 mt-1">Progresso: {pct}%</div>
-                  </div>
-
-                  <div className="mt-6 text-center">
-                    {isHost ? (
-                      <Button onClick={nextQuestionHost} disabled={picked === null} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Próxima Pergunta (Host)</Button>
-                    ) : (
-                      <div className="text-sm text-white/60">Aguardando o anfitrião avançar…</div>
-                    )}
-                  </div>
-                </Card>
-              )}
-
-              {screen === "end" && (
-                <>
-                  <Confetti count={100} />
-                  <Card className="text-center relative z-10">
-                    <h1 className="text-4xl font-extrabold mb-2">Fim de Jogo!</h1>
-                    <h2 className="text-2xl font-semibold text-indigo-200 mb-6">
-                      O grande vencedor é... <span className="text-3xl text-white">{players.slice().sort((a,b)=>b.points-a.points)[0]?.name || "—"}</span>!
-                    </h2>
-                    <h3 className="text-xl font-semibold mt-4 mb-2">Placar Final:</h3>
-                    <ul className="space-y-2 max-w-md mx-auto">
-                      {players.slice().sort((a,b)=> b.points - a.points).map((p, i) => (
-                        <li key={p.id + i} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
-                          <span className="font-medium">{i + 1}. {p.name}</span>
-                          <span className="text-sm text-white/70">{p.points} pts</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-6"><Button onClick={resetUI} className="rounded-full">Jogar Novamente</Button></div>
-                  </Card>
-                </>
-              )}
+          {/* Modal de Pontuação */}
+          {showBoard && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <Card className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/10 text-white">
+                <h2 className="text-2xl font-bold mb-4">Pontuação</h2>
+                <ul className="space-y-2">
+                  {(connected ? players : [{ id: "1", name: name || "Você", points: score }])
+                    .slice()
+                    .sort((a,b)=> b.points - a.points)
+                    .map((p, i) => (
+                      <li key={p.id + i} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
+                        <span className="font-medium">{i + 1}. {p.name}</span>
+                        <span className="text-sm text-white/70">{p.points} pts</span>
+                      </li>
+                    ))}
+                </ul>
+                <Button variant="secondary" className="mt-6 rounded-full" onClick={() => setShowBoard(false)}>Fechar</Button>
+              </Card>
             </div>
-          </div>
-        );
-      }
-
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(<App />);
-    </script>
-  </body>
-</html>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
