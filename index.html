@@ -32,13 +32,16 @@
       const { useState, useRef, useEffect } = React;
 
       // 🔧 COLE SUA CONFIG DO FIREBASE AQUI
-      const firebaseConfig = {
-        apiKey: "COLE_AQUI",
-        authDomain: "SEU-PROJETO.firebaseapp.com",
-        databaseURL: "https://SEU-PROJETO-default-rtdb.firebaseio.com",
-        projectId: "SEU-PROJETO",
-        appId: "COLE_AQUI"
-      };
+const firebaseConfig = {
+  apiKey: "AIzaSyBu2s6DU9d-hc5HTqSuyYLV6Ut0oOwRIls",
+  authDomain: "quizmultijogador.firebaseapp.com",
+  databaseURL: "https://quizmultijogador-default-rtdb.firebaseio.com",
+  projectId: "quizmultijogador",
+  storageBucket: "quizmultijogador.firebasestorage.app",
+  messagingSenderId: "245519129065",
+  appId: "1:245519129065:web:95727cf109edad07f29378",
+  measurementId: "G-0BRETH5CW3"
+};
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
       const auth = firebase.auth();
@@ -450,3 +453,4 @@
     </script>
   </body>
 </html>
+
