@@ -23,6 +23,7 @@
     <!-- Firebase compat (sem bundler) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   </head>
   <body class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-fuchsia-900">
     <div id="root"></div>
@@ -43,6 +44,8 @@
 };
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
+      const auth = firebase.auth();
+      const googleProvider = new firebase.auth.GoogleAuthProvider();
 
       // 📚 DATASET DEMO (2 quizes)
       const QUIZZES = {
@@ -106,14 +109,34 @@
         const [picked, setPicked] = useState(null);
         const [started, setStarted] = useState(false);
         const [joinCode, setJoinCode] = useState("");
+        const [user, setUser] = React.useState(null);
 
         const quiz = selectedQuizKey ? QUIZZES[selectedQuizKey] : null;
         const total = quiz?.questions.length ?? 0;
         const current = quiz?.questions[qid];
         const pct = total ? Math.round(((qid + 1) / total) * 100) : 0;
 
-        async function copyCode() { try { await navigator.clipboard.writeText(room || gameCode); setCopied(true); setTimeout(()=>setCopied(false),1500); } catch {} }
+React.useEffect(() => {
+  const unsub = auth.onAuthStateChanged((u) => {
+    setUser(u);
+    // se logou e o campo "name" está vazio, usa o nome do Google
+    if (u && !name) setName(u.displayName || (u.email ? u.email.split("@")[0] : "Jogador"));
+  });
+  return unsub;
+}, []);
 
+        async function signInGoogle() {
+  try {
+    await auth.signInWithPopup(googleProvider);
+  } catch {
+    // fallback para mobile
+    await auth.signInWithRedirect(googleProvider);
+  }
+}
+function signOutGoogle() { auth.signOut(); }
+
+        async function copyCode() { try { await navigator.clipboard.writeText(room || gameCode); setCopied(true); setTimeout(()=>setCopied(false),1500); } catch {} }
+      
         // helpers de referência da sala no Realtime DB
         const roomRefs = (rid) => ({
           players: db.ref(`rooms/${rid}/players`),
@@ -154,9 +177,45 @@
             }
           });
         }
+const savedOnceRef = React.useRef(false);
+
+function saveFinalScoreIfNeeded({ theme, totalQ, ended }) {
+  if (!user || !room || !ended || savedOnceRef.current) return;
+  savedOnceRef.current = true;
+
+  const myPoints = (players.find(p => p.id === playerId)?.points) || 0;
+  const payload = {
+    theme,
+    points: myPoints,
+    totalQuestions: totalQ,
+    room,
+    at: Date.now(),
+    displayName: user.displayName || name || "Jogador",
+    uid: user.uid
+  };
+
+  // histórico do usuário
+  db.ref(`users/${user.uid}/results`).push(payload);
+
+  // leaderboard por tema (guarda o melhor)
+  const lbRef = db.ref(`leaderboards/${theme}/${user.uid}`);
+  lbRef.transaction(curr => {
+    if (!curr || myPoints > (curr.points || 0)) {
+      return {
+        points: myPoints,
+        displayName: payload.displayName,
+        photoURL: user.photoURL || null,
+        uid: user.uid,
+        updatedAt: Date.now()
+      };
+    }
+    return curr;
+  });
+}
 
         // Host: cria sala
-        function handleCreate(){
+       function handleCreate(){
+          if (!user) return alert("Entre com o Google primeiro (topo da tela).");
           if (!name.trim()) return alert("Digite seu nome");
           const rid = gameCode;
           const { players } = roomRefs(rid);
@@ -165,9 +224,9 @@
           setRoom(rid); setIsHost(true); setScreen("waiting");
           listenRoom(rid);
         }
-
         // Jogador: entra em sala
         function handleJoin(){
+          if (!user) return alert("Entre com o Google primeiro (topo da tela).");
           if (!name.trim()) return alert("Digite seu nome");
           if (!joinCode.trim()) return alert("Digite o código da sala");
           const rid = joinCode.trim().toUpperCase();
@@ -212,7 +271,12 @@
           });
           setPicked(null);
         }
-
+        const isEnd = (s.end === true) || (typeof s.qid === "number" && totalQ > 0 && s.qid >= totalQ);
+        if (isEnd) {
+          setScreen("end");
+         // 🔥 salva pontuação do jogador autenticado
+          saveFinalScoreIfNeeded({ theme: key, totalQ, ended: true });
+}
         // Jogador: responde
         function chooseAnswer(i){
           if (picked !== null) return;
@@ -228,9 +292,21 @@
           <div className="p-6 flex items-center justify-center">
             <div className="w-full max-w-3xl">
               {/* Header */}
-              <div className="flex items-center justify-between mb-4 text-white/80">
-                <div className="text-xs">Sala: <span className="font-mono">{room || "—"}</span></div>
-              </div>
+             <div className="flex items-center justify-between mb-4 text-white/80">
+  <div className="text-sm tracking-wide">AR-KN Quiz • Firebase Multiplayer</div>
+  <div className="flex items-center gap-3">
+    <div className="text-xs">Sala: <span className="font-mono">{room || "—"}</span></div>
+    {user ? (
+      <div className="flex items-center gap-2">
+        {user.photoURL && <img src={user.photoURL} alt="avatar" className="w-6 h-6 rounded-full" />}
+        <span className="text-xs">{user.displayName || "Você"}</span>
+        <button onClick={signOutGoogle} className="text-xs underline hover:opacity-80">Sair</button>
+      </div>
+    ) : (
+      <button onClick={signInGoogle} className="text-xs underline hover:opacity-80">Entrar com Google</button>
+    )}
+  </div>
+</div>
 
               {screen === "lobby" && (
                 <Card className="text-center">
@@ -396,4 +472,5 @@
     </script>
   </body>
 </html>
+
 
