@@ -454,14 +454,14 @@
                       <Input value={name} onChange={(e)=>setName(e.target.value)} placeholder="Digite seu nome" />
                     </div>
                     <div>
-                      <div className="text-sm text-white/60 mb-1">Código da sala (para entrar)</div>
+                      <div className="text-sm text-white/60 mb-1">Código da sala (Caso tenha)</div>
                       <Input value={joinCode} onChange={(e)=>setJoinCode(e.target.value.toUpperCase())} placeholder="ABCD1" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala (Host)</Button>
-                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar na Sala (Jogador)</Button>
+                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala</Button>
+                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar na Sala</Button>
                   </div>
 
                   <div className="mt-6 text-xs text-white/60">Dica: compartilhe o código <span className="font-mono">{gameCode}</span> com os amigos.</div>
@@ -627,4 +627,5 @@
     </script>
   </body>
 </html>
+
 
