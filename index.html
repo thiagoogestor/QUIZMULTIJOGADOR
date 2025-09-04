@@ -229,14 +229,13 @@
             <div className="w-full max-w-3xl">
               {/* Header */}
               <div className="flex items-center justify-between mb-4 text-white/80">
-                <div className="text-sm tracking-wide">AR-KN Quiz • Firebase Multiplayer</div>
                 <div className="text-xs">Sala: <span className="font-mono">{room || "—"}</span></div>
               </div>
 
               {screen === "lobby" && (
                 <Card className="text-center">
-                  <h1 className="text-4xl font-extrabold mb-2">Quiz em Família!</h1>
-                  <p className="text-white/70 mb-8">Sem servidor. Cole sua config do Firebase acima e jogue.</p>
+                    <h1 className="text-4xl font-extrabold mb-2">Quiz Verso </h1>
+                  <p className="text-white/70 mb-8">Onde a Diversão é garantida e o aprendizado é contínuo!.</p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                     <div>
@@ -244,14 +243,14 @@
                       <Input value={name} onChange={(e)=>setName(e.target.value)} placeholder="Digite seu nome" />
                     </div>
                     <div>
-                      <div className="text-sm text-white/60 mb-1">Código da sala (para entrar)</div>
+                      <div className="text-sm text-white/60 mb-1">Código da sala (Caso tenha)</div>
                       <Input value={joinCode} onChange={(e)=>setJoinCode(e.target.value.toUpperCase())} placeholder="ABCD1" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala (Host)</Button>
-                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar na Sala (Jogador)</Button>
+                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala</Button>
+                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar em sala existente</Button>
                   </div>
 
                   <div className="mt-6 text-xs text-white/60">Dica: compartilhe o código <span className="font-mono">{gameCode}</span> com os amigos.</div>
@@ -397,3 +396,4 @@
     </script>
   </body>
 </html>
+
