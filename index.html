@@ -33,47 +33,28 @@
 
       // 🔧 COLE SUA CONFIG DO FIREBASE AQUI
       const firebaseConfig = {
-  apiKey: "AIzaSyBu2s6DU9d-hc5HTqSuyYLV6Ut0oOwRIls",
-  authDomain: "quizmultijogador.firebaseapp.com",
-  databaseURL: "https://quizmultijogador-default-rtdb.firebaseio.com",
-  projectId: "quizmultijogador",
-  storageBucket: "quizmultijogador.firebasestorage.app",
-  messagingSenderId: "245519129065",
-  appId: "1:245519129065:web:95727cf109edad07f29378",
-  measurementId: "G-0BRETH5CW3"
-};
+        apiKey: "COLE_AQUI",
+        authDomain: "SEU-PROJETO.firebaseapp.com",
+        databaseURL: "https://SEU-PROJETO-default-rtdb.firebaseio.com",
+        projectId: "SEU-PROJETO",
+        appId: "COLE_AQUI"
+      };
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
       const auth = firebase.auth();
       const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-      // 📚 DATASET DEMO (2 quizes)
+      // 📚 DATASET DEMO (2 quizes). Você pode adicionar mais quizes aqui.
       const QUIZZES = {
-       "geral": {
-                name: "Conhecimentos Gerais",
-                questions: [
-                    { question: "Qual é a capital do Brasil?", answers: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], correct: 2 },
-                    { question: "Quem pintou a Mona Lisa?", answers: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2 },
-                    { question: "Qual o maior animal do mundo?", answers: ["Elefante", "Tubarão Baleia", "Baleia Azul", "Girafa"], correct: 2 },
-                    { question: "Quem escreveu 'Dom Quixote'?", answers: ["Machado de Assis", "Miguel de Cervantes", "Shakespeare", "Fernando Pessoa"], correct: 1 },
-                    { question: "Em que ano o homem pisou na Lua?", answers: ["1969", "1972", "1965", "1980"], correct: 0 },
-                    { question: "Qual é o rio mais longo do mundo?", answers: ["Rio Nilo", "Rio Amazonas", "Rio Mississipi", "Rio Yangtzé"], correct: 1 },
-                    { question: "Qual a montanha mais alta do mundo?", answers: ["Monte Everest", "K2", "Kangchenjunga", "Lhotse"], correct: 0 },
-                    { question: "Qual a fórmula química da água?", answers: ["CO2", "O2", "H2O2", "H2O"], correct: 3 },
-                    { question: "Qual país tem o formato de uma bota?", answers: ["Grécia", "Portugal", "Itália", "Espanha"], correct: 2},
-                    { question: "Quem foi o inventor da lâmpada?", answers: ["Nikola Tesla", "Thomas Edison", "Graham Bell", "Santos Dumont"], correct: 1},
-                    { question: "Qual a capital de Portugal?", answers: ["Madrid", "Porto", "Roma", "Lisboa"], correct: 3},
-                    { question: "Quem descobriu o Brasil?", answers: ["Cristóvão Colombo", "Vasco da Gama", "Pedro Álvares Cabral", "Américo Vespúcio"], correct: 2},
-                    { question: "Qual a moeda oficial do Japão?", answers: ["Yuan", "Won", "Iene", "Rupia"], correct: 2},
-                    { question: "Qual o nome do oceano que banha o Brasil?", answers: ["Pacífico", "Índico", "Atlântico", "Ártico"], correct: 2 },
-                    { question: "Qual o deserto mais quente do mundo?", answers: ["Saara", "Atacama", "Arábia", "Gobi"], correct: 0},
-                    { question: "Qual o plural de 'cidadão'?", answers: ["Cidadãos", "Cidadões", "Cidades", "Cidadãs"], correct: 0 },
-                    { question: "Em que continente fica o Egito?", answers: ["Ásia", "Europa", "África", "Oceania"], correct: 2 },
-                    { question: "Qual o coletivo de cães?", answers: ["Manada", "Cardume", "Alcateia", "Rebanho"], correct: 2 },
-                    { question: "Qual o ponto mais alto do Brasil?", answers: ["Pico da Neblina", "Pico 31 de Março", "Monte Roraima", "Pico da Bandeira"], correct: 0 },
-                    { question: "Quantos lados tem um heptágono?", answers: ["5", "6", "7", "8"], correct: 2 }
-                ]
-            },
+        geral: {
+          name: "Conhecimentos Gerais",
+          questions: [
+            // Formato q/a/c
+            { q: "Qual é a capital do Brasil?", a: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], c: 2 },
+            // Este abaixo poderia estar no formato question/answers/correct e será normalizado
+            { question: "Quem pintou a Mona Lisa?", answers: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2 },
+          ],
+        },
         ciencia: {
           name: "Ciência e Tecnologia",
           questions: [
@@ -83,23 +64,18 @@
         },
       };
 
-      // Normaliza cada questão para o formato { q, a, c }
-function normalizeQuizData(baseQuiz) {
-  if (!baseQuiz) return null;
-  const qs = (baseQuiz.questions || []).map((item) => {
-    // se já está no formato esperado, mantém
-    if (typeof item?.q !== "undefined" && Array.isArray(item.a) && typeof item?.c !== "undefined") {
-      return item;
-    }
-    // adapta de question/answers/correct
-    return {
-      q: item.question,
-      a: item.answers,
-      c: item.correct,
-    };
-  });
-  return { name: baseQuiz.name, questions: qs };
-}
+      // ✅ Normaliza questões para { q, a, c } e tolera { question, answers, correct }
+      function normalizeQuizData(baseQuiz) {
+        if (!baseQuiz) return null;
+        const qs = (baseQuiz.questions || []).map((item) => {
+          if (typeof item?.q !== "undefined" && Array.isArray(item.a) && typeof item?.c !== "undefined") {
+            return item;
+          }
+          return { q: item.question, a: item.answers, c: item.correct };
+        });
+        return { name: baseQuiz.name, questions: qs };
+      }
+
       function Card({ children, className = "" }) {
         return <div className={`bg-white/10 backdrop-blur-xl border border-white/10 text-white rounded-xl shadow-xl p-6 ${className}`}>{children}</div>;
       }
@@ -138,7 +114,7 @@ function normalizeQuizData(baseQuiz) {
         const [copied, setCopied] = useState(false);
 
         const [user, setUser] = useState(null);
-        const [playerIdFallback] = useState(() => Math.random().toString(36).slice(2,10));
+        const [playerIdFallback] = useState(() => Math.random().toString(36).slice(2,10)); // id temporário p/ quem joga sem login
         const [room, setRoom] = useState("");
         const [players, setPlayers] = useState([]);
         const [qid, setQid] = useState(0);
@@ -146,27 +122,28 @@ function normalizeQuizData(baseQuiz) {
         const [started, setStarted] = useState(false);
         const [joinCode, setJoinCode] = useState("");
 
-        const [userBest, setUserBest] = useState({}); // 🏆 recordes por quiz do usuário logado
+        const [userBest, setUserBest] = useState({}); // 🏆 recordes por quiz do usuário
         const savedOnceRef = useRef(false);
 
-        const pid = user?.uid || playerIdFallback; // usa UID do Google se tiver login
+        // usa UID do Google se logado; senão, id temporário
+        const pid = user?.uid || playerIdFallback;
 
+        // Login → seta user, preenche nome, e se já estiver numa sala, faz bind fallback→uid
         useEffect(() => {
-          const unsub = auth.onAuthStateChanged((u) => {
+          const unsub = auth.onAuthStateChanged(async (u) => {
             setUser(u);
             if (u && !name) setName(u.displayName || (u.email ? u.email.split("@")[0] : "Jogador"));
+            if (u && room) { await bindPlayerToUidIfNeeded(u); }
           });
           return unsub;
-        }, [name]);
+        }, [name, room]);
 
-        // Carrega recordes do usuário por quiz
+        // Carrega recordes do usuário por quiz (leaderboards/{quiz}/{uid})
         useEffect(() => {
           async function fetchBests(u) {
             if (!u) { setUserBest({}); return; }
             const themes = Object.keys(QUIZZES);
-            const snaps = await Promise.all(
-              themes.map((t) => db.ref(`leaderboards/${t}/${u.uid}`).once("value"))
-            );
+            const snaps = await Promise.all(themes.map((t) => db.ref(`leaderboards/${t}/${u.uid}`).once("value")));
             const map = {};
             themes.forEach((t, i) => { const v = snaps[i].val(); map[t] = v?.points || 0; });
             setUserBest(map);
@@ -174,6 +151,7 @@ function normalizeQuizData(baseQuiz) {
           fetchBests(user);
         }, [user]);
 
+        // Normaliza o quiz selecionado
         const quiz = normalizeQuizData(selectedQuizKey ? QUIZZES[selectedQuizKey] : null);
         const total = quiz?.questions.length ?? 0;
         const current = quiz?.questions[qid];
@@ -200,11 +178,11 @@ function normalizeQuizData(baseQuiz) {
             const s = snap.val() || { started:false, qid:0 };
             const startedNow = !!s.started;
 
-            // sincroniza tema pra quem não é host
+            // sincroniza tema pra todos
             if (s.theme) setSelectedQuizKey(s.theme);
 
             const key = s.theme || selectedQuizKey;
-            const totalQ = key && QUIZZES[key] ? QUIZZES[key].questions.length : 0;
+            const totalQ = key && QUIZZES[key] ? normalizeQuizData(QUIZZES[key]).questions.length : 0;
 
             setStarted(startedNow);
             setQid(s.qid|0);
@@ -212,7 +190,7 @@ function normalizeQuizData(baseQuiz) {
 
             if (startedNow) {
               setScreen("game");
-              savedOnceRef.current = false; // começou nova partida
+              savedOnceRef.current = false; // nova partida
             } else {
               const isEnd = (s.end === true) || (typeof s.qid === "number" && totalQ > 0 && s.qid >= totalQ);
               if (isEnd) {
@@ -223,6 +201,37 @@ function normalizeQuizData(baseQuiz) {
           });
         }
 
+        async function bindPlayerToUidIfNeeded(u) {
+          try {
+            if (!u || !room) return;
+            const { players } = roomRefs(room);
+            const snap = await players.once("value");
+            const hasUid = snap.child(u.uid).exists();
+            const hasFallback = snap.child(playerIdFallback).exists();
+
+            // move pontos do nó temporário -> uid
+            if (!hasUid && hasFallback) {
+              const data = snap.child(playerIdFallback).val() || {};
+              const next = {
+                name: data.name || u.displayName || name || "Jogador",
+                points: (data.points | 0),
+              };
+              await players.child(u.uid).set(next);
+              await players.child(playerIdFallback).remove();
+              players.child(u.uid).onDisconnect().remove();
+            } else if (!hasUid) {
+              await players.child(u.uid).set({
+                name: u.displayName || name || "Jogador",
+                points: 0,
+              });
+              players.child(u.uid).onDisconnect().remove();
+            }
+          } catch (e) {
+            console.warn("bindPlayerToUidIfNeeded error:", e);
+          }
+        }
+
+        // Host: cria sala
         function handleCreate(){
           if (!name.trim()) return alert("Digite seu nome");
           const rid = gameCode;
@@ -233,6 +242,7 @@ function normalizeQuizData(baseQuiz) {
           listenRoom(rid);
         }
 
+        // Jogador: entra em sala
         function handleJoin(){
           if (!name.trim()) return alert("Digite seu nome");
           if (!joinCode.trim()) return alert("Digite o código da sala");
@@ -244,7 +254,7 @@ function normalizeQuizData(baseQuiz) {
           listenRoom(rid);
         }
 
-        // 🔁 Host: inicia (zera pontos de todos -> pontuação POR QUIZ)
+        // 🔁 Host: inicia (zera pontos de todos → pontuação POR QUIZ)
         async function startGameHost(){
           if (!selectedQuizKey || !quiz) return;
           const rid = room || gameCode;
@@ -270,6 +280,7 @@ function normalizeQuizData(baseQuiz) {
           setScreen("game");
         }
 
+        // Host: próxima pergunta
         function nextQuestionHost(){
           const rid = room;
           if (!quiz || !rid) return;
@@ -290,6 +301,7 @@ function normalizeQuizData(baseQuiz) {
           setPicked(null);
         }
 
+        // Jogador: responde
         function chooseAnswer(i){
           if (picked !== null) return;
           setPicked(i);
@@ -297,10 +309,16 @@ function normalizeQuizData(baseQuiz) {
           db.ref(`rooms/${room}/answers/${qid}/${pid}`).set({ choice: i, at: Date.now() });
         }
 
+        // 🔐 Salva histórico e atualiza leaderboard
         function saveFinalScoreIfNeeded({ theme, totalQ, ended }) {
           if (!user || !room || !ended || savedOnceRef.current) return;
           savedOnceRef.current = true;
-          const myPoints = (players.find(p => p.id === pid)?.points) || 0;
+
+          // tenta primeiro com uid (pid), depois com id temporário
+          const entryByUid = players.find(p => p.id === pid);
+          const entryByFallback = players.find(p => p.id === playerIdFallback);
+          const myPoints = (entryByUid?.points ?? entryByFallback?.points ?? 0);
+
           const payload = {
             theme,
             points: myPoints,
@@ -310,8 +328,10 @@ function normalizeQuizData(baseQuiz) {
             displayName: user.displayName || name || "Jogador",
             uid: user.uid
           };
+
           // histórico do usuário
           db.ref(`users/${user.uid}/results`).push(payload);
+
           // leaderboard por tema (melhor pontuação)
           const lbRef = db.ref(`leaderboards/${theme}/${user.uid}`);
           lbRef.transaction(curr => {
@@ -326,12 +346,13 @@ function normalizeQuizData(baseQuiz) {
             }
             return curr;
           }, (err, committed, snap) => {
-            // Atualiza cache local para refletir o novo recorde
-            const best = snap?.val()?.points || myPoints;
+            // atualiza cache local do recorde
+            const best = snap?.val()?.points ?? myPoints;
             setUserBest(prev => ({ ...prev, [theme]: Math.max(prev[theme] || 0, best) }));
           });
         }
 
+        // Reset visual para voltar ao lobby
         function resetUI(){ setScreen("waiting"); setSelectedQuizKey(null); setQid(0); setPicked(null); }
 
         return (
@@ -339,6 +360,7 @@ function normalizeQuizData(baseQuiz) {
             <div className="w-full max-w-3xl">
               {/* Header */}
               <div className="flex items-center justify-between mb-4 text-white/80">
+                <div className="text-sm tracking-wide">AR-KN Quiz • Firebase Multiplayer</div>
                 <div className="flex items-center gap-3">
                   <div className="text-xs">Sala: <span className="font-mono">{room || "—"}</span></div>
                   {user ? (
@@ -355,8 +377,8 @@ function normalizeQuizData(baseQuiz) {
 
               {screen === "lobby" && (
                 <Card className="text-center">
-                  <h1 className="text-4xl font-extrabold mb-2">Quiz Verso</h1>
-                  <p className="text-white/70 mb-8">Onde a Diversão é garantida e o aprendizado Contínuo!</p>
+                  <h1 className="text-4xl font-extrabold mb-2">Quiz em Família!</h1>
+                  <p className="text-white/70 mb-8">Sem servidor. Cole sua config do Firebase acima e jogue.</p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                     <div>
@@ -370,8 +392,8 @@ function normalizeQuizData(baseQuiz) {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala</Button>
-                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar na Sala</Button>
+                    <Button onClick={handleCreate} className="rounded-full shadow-lg shadow-indigo-900/40">Criar Nova Sala (Host)</Button>
+                    <Button variant="secondary" onClick={handleJoin} className="rounded-full">Entrar na Sala (Jogador)</Button>
                   </div>
 
                   <div className="mt-6 text-xs text-white/60">Dica: compartilhe o código <span className="font-mono">{gameCode}</span> com os amigos.</div>
@@ -402,36 +424,36 @@ function normalizeQuizData(baseQuiz) {
                     <div className="mt-6">
                       <h3 className="text-xl font-semibold mb-2">Escolha o Tema do Quiz:</h3>
                       <div className="grid grid-cols-1 gap-2 mb-4">
-  {Object.entries(QUIZZES).map(([key, q]) => {
-    const totalQ = q.questions.length;
-    const best = userBest[key] ?? 0; // recorde pessoal carregado do /leaderboards
-    return (
-      <button
-        key={key}
-        onClick={() => setSelectedQuizKey(key)}
-        className={`text-left px-4 py-3 rounded-xl border transition transform ${
-          selectedQuizKey === key
-            ? "bg-indigo-600/90 text-white border-indigo-400 shadow-lg scale-[1.01]"
-            : "bg-white/5 text-white/90 hover:bg-white/10 border-white/10"
-        }`}
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="font-semibold">{q.name}</div>
-          <div className="text-xs opacity-75 flex items-center gap-3">
-            {user ? (
-              <span className="inline-flex items-center gap-1">
-                <span className="text-yellow-300">🏆</span>
-                <span className="font-semibold">{best}/{totalQ}</span>
-                <span>melhor</span>
-              </span>
-            ) : null}
-            <span>{totalQ} questões</span>
-          </div>
-        </div>
-      </button>
-    );
-  })}
-</div>
+                        {Object.entries(QUIZZES).map(([key, q]) => {
+                          const totalQ = normalizeQuizData(q).questions.length;
+                          const best = userBest[key] ?? 0;
+                          return (
+                            <button
+                              key={key}
+                              onClick={() => setSelectedQuizKey(key)}
+                              className={`text-left px-4 py-3 rounded-xl border transition transform ${
+                                selectedQuizKey === key
+                                  ? "bg-indigo-600/90 text-white border-indigo-400 shadow-lg scale-[1.01]"
+                                  : "bg-white/5 text-white/90 hover:bg-white/10 border-white/10"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="font-semibold">{q.name}</div>
+                                <div className="text-xs opacity-75 flex items-center gap-3">
+                                  {user ? (
+                                    <span className="inline-flex items-center gap-1">
+                                      <span className="text-yellow-300">🏆</span>
+                                      <span className="font-semibold">{best}/{totalQ}</span>
+                                      <span>melhor</span>
+                                    </span>
+                                  ) : null}
+                                  <span>{totalQ} questões</span>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
                       <Button onClick={startGameHost} disabled={!selectedQuizKey} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Começar o Jogo!</Button>
                     </div>
                   ) : (
@@ -537,6 +559,3 @@ function normalizeQuizData(baseQuiz) {
     </script>
   </body>
 </html>
-
-
-
