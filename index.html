@@ -33,12 +33,15 @@
 
       // 🔧 COLE SUA CONFIG DO FIREBASE AQUI
       const firebaseConfig = {
-        apiKey: "COLE_AQUI",
-        authDomain: "SEU-PROJETO.firebaseapp.com",
-        databaseURL: "https://SEU-PROJETO-default-rtdb.firebaseio.com",
-        projectId: "SEU-PROJETO",
-        appId: "COLE_AQUI"
-      };
+  apiKey: "AIzaSyBu2s6DU9d-hc5HTqSuyYLV6Ut0oOwRIls",
+  authDomain: "quizmultijogador.firebaseapp.com",
+  databaseURL: "https://quizmultijogador-default-rtdb.firebaseio.com",
+  projectId: "quizmultijogador",
+  storageBucket: "quizmultijogador.firebasestorage.app",
+  messagingSenderId: "245519129065",
+  appId: "1:245519129065:web:95727cf109edad07f29378",
+  measurementId: "G-0BRETH5CW3"
+};
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
       const auth = firebase.auth();
@@ -46,15 +49,81 @@
 
       // 📚 DATASET DEMO (2 quizes). Você pode adicionar mais quizes aqui.
       const QUIZZES = {
-        geral: {
-          name: "Conhecimentos Gerais",
-          questions: [
-            // Formato q/a/c
-            { q: "Qual é a capital do Brasil?", a: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], c: 2 },
-            // Este abaixo poderia estar no formato question/answers/correct e será normalizado
-            { question: "Quem pintou a Mona Lisa?", answers: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2 },
-          ],
-        },
+        "geral": {
+                name: "Conhecimentos Gerais",
+                questions: [
+                    { question: "Qual é a capital do Brasil?", answers: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"], correct: 2 },
+                    { question: "Quem pintou a Mona Lisa?", answers: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2 },
+                    { question: "Qual o maior animal do mundo?", answers: ["Elefante", "Tubarão Baleia", "Baleia Azul", "Girafa"], correct: 2 },
+                    { question: "Quem escreveu 'Dom Quixote'?", answers: ["Machado de Assis", "Miguel de Cervantes", "Shakespeare", "Fernando Pessoa"], correct: 1 },
+                    { question: "Em que ano o homem pisou na Lua?", answers: ["1969", "1972", "1965", "1980"], correct: 0 },
+                    { question: "Qual é o rio mais longo do mundo?", answers: ["Rio Nilo", "Rio Amazonas", "Rio Mississipi", "Rio Yangtzé"], correct: 1 },
+                    { question: "Qual a montanha mais alta do mundo?", answers: ["Monte Everest", "K2", "Kangchenjunga", "Lhotse"], correct: 0 },
+                    { question: "Qual a fórmula química da água?", answers: ["CO2", "O2", "H2O2", "H2O"], correct: 3 },
+                    { question: "Qual país tem o formato de uma bota?", answers: ["Grécia", "Portugal", "Itália", "Espanha"], correct: 2},
+                    { question: "Quem foi o inventor da lâmpada?", answers: ["Nikola Tesla", "Thomas Edison", "Graham Bell", "Santos Dumont"], correct: 1},
+                    { question: "Qual a capital de Portugal?", answers: ["Madrid", "Porto", "Roma", "Lisboa"], correct: 3},
+                    { question: "Quem descobriu o Brasil?", answers: ["Cristóvão Colombo", "Vasco da Gama", "Pedro Álvares Cabral", "Américo Vespúcio"], correct: 2},
+                    { question: "Qual a moeda oficial do Japão?", answers: ["Yuan", "Won", "Iene", "Rupia"], correct: 2},
+                    { question: "Qual o nome do oceano que banha o Brasil?", answers: ["Pacífico", "Índico", "Atlântico", "Ártico"], correct: 2 },
+                    { question: "Qual o deserto mais quente do mundo?", answers: ["Saara", "Atacama", "Arábia", "Gobi"], correct: 0},
+                    { question: "Qual o plural de 'cidadão'?", answers: ["Cidadãos", "Cidadões", "Cidades", "Cidadãs"], correct: 0 },
+                    { question: "Em que continente fica o Egito?", answers: ["Ásia", "Europa", "África", "Oceania"], correct: 2 },
+                    { question: "Qual o coletivo de cães?", answers: ["Manada", "Cardume", "Alcateia", "Rebanho"], correct: 2 },
+                    { question: "Qual o ponto mais alto do Brasil?", answers: ["Pico da Neblina", "Pico 31 de Março", "Monte Roraima", "Pico da Bandeira"], correct: 0 },
+                    { question: "Quantos lados tem um heptágono?", answers: ["5", "6", "7", "8"], correct: 2 }
+                ]
+            },
+        "geral2": {
+                name: "Conhecimentos Gerais 2",
+                questions: [
+                    { question: "Qual o livro mais vendido no mundo, a seguir à Bíblia?", answers: ["Dom Quixote", "O Senhor dos Anéis", "O Pequeno Príncipe", "Harry Potter"], correct: 0 },
+                    { question: "Qual a nacionalidade de Pablo Picasso?", answers: ["Italiana", "Francesa", "Espanhola", "Portuguesa"], correct: 2 },
+                    { question: "Qual o metal mais abundante na crosta terrestre?", answers: ["Ferro", "Cobre", "Ouro", "Alumínio"], correct: 3 },
+                    { question: "Em que país nasceu a pizza?", answers: ["Grécia", "Itália", "Estados Unidos", "França"], correct: 1 },
+                    { question: "Qual destes planetas não tem anéis?", answers: ["Saturno", "Júpiter", "Vénus", "Urano"], correct: 2 },
+                    { question: "Quantas patas tem uma aranha?", answers: ["6", "8", "10", "12"], correct: 1 },
+                    { question: "Qual a cidade conhecida como a 'Big Apple'?", answers: ["Los Angeles", "Chicago", "Miami", "Nova Iorque"], correct: 3 },
+                    { question: "Quem foi a primeira mulher a ganhar um Prémio Nobel?", answers: ["Marie Curie", "Rosalind Franklin", "Ada Lovelace", "Dorothy Hodgkin"], correct: 0 },
+                    { question: "Qual o nome do maior osso do corpo humano?", answers: ["Tíbia", "Fêmur", "Úmero", "Pelve"], correct: 1 },
+                    { question: "Quantos dentes tem um ser humano adulto?", answers: ["28", "30", "32", "26"], correct: 2 },
+                    { question: "Qual o nome do processo de conversão de açúcar em álcool?", answers: ["Fotossíntese", "Respiração", "Digestão", "Fermentação"], correct: 3 },
+                    { question: "Em que cidade se encontram as ruínas de Machu Picchu?", answers: ["México", "Chile", "Bolívia", "Peru"], correct: 3 },
+                    { question: "Qual a capital da Austrália?", answers: ["Sydney", "Melbourne", "Camberra", "Brisbane"], correct: 2 },
+                    { question: "Qual o animal que consegue sobreviver mais tempo sem água?", answers: ["Camelo", "Rato-canguru", "Elefante", "Girafa"], correct: 1 },
+                    { question: "Qual o nome do criador da personagem de BD 'Tintim'?", answers: ["Goscinny", "Uderzo", "Hergé", "Franquin"], correct: 2 },
+                    { question: "Qual o nome do deus do trovão na mitologia nórdica?", answers: ["Odin", "Loki", "Thor", "Freyr"], correct: 2 },
+                    { question: "Qual o oceano mais frio do mundo?", answers: ["Pacífico", "Atlântico", "Índico", "Ártico"], correct: 3 },
+                    { question: "Qual a cor que resulta da mistura de azul e amarelo?", answers: ["Roxo", "Laranja", "Verde", "Cinzento"], correct: 2 },
+                    { question: "Qual o nome da primeira pessoa a viajar para o espaço?", answers: ["Neil Armstrong", "Buzz Aldrin", "Yuri Gagarin", "John Glenn"], correct: 2 },
+                    { question: "Qual o animal que tem o maior cérebro em proporção ao seu corpo?", answers: ["Humano", "Golfinho", "Elefante", "Formiga"], correct: 3 }
+                ]
+            },
+        "artes": {
+                name: "Artes e Entretenimento",
+                questions: [
+                    { question: "Qual banda de rock é conhecida como 'The Fab Four'?", answers: ["The Rolling Stones", "The Beatles", "Queen", "Led Zeppelin"], correct: 1 },
+                    { question: "Quem escreveu a saga 'Harry Potter'?", answers: ["J. R. R. Tolkien", "J. K. Rowling", "George R. R. Martin", "C. S. Lewis"], correct: 1 },
+                    { question: "Qual o nome do vocalista da banda Queen?", answers: ["Freddie Mercury", "Elton John", "David Bowie", "Mick Jagger"], correct: 0 },
+                    { question: "Qual destes pintores é famoso por cortar a própria orelha?", answers: ["Pablo Picasso", "Claude Monet", "Salvador Dalí", "Vincent van Gogh"], correct: 3 },
+                    { question: "Qual filme ganhou o primeiro Oscar de Melhor Animação?", answers: ["A Bela e a Fera", "O Rei Leão", "Toy Story", "Shrek"], correct: 3 },
+                    { question: "Quem é o autor da famosa peça 'Romeu e Julieta'?", answers: ["Machado de Assis", "Charles Dickens", "William Shakespeare", "Dante Alighieri"], correct: 2 },
+                    { question: "Qual série de TV se passa em Westeros?", answers: ["The Witcher", "Game of Thrones", "Vikings", "The Last Kingdom"], correct: 1 },
+                    { question: "Qual cantor é conhecido como o 'Rei do Pop'?", answers: ["Elvis Presley", "James Brown", "Michael Jackson", "Prince"], correct: 2 },
+                    { question: "De qual país o tango é uma dança tradicional?", answers: ["Espanha", "Brasil", "México", "Argentina"], correct: 3 },
+                    { question: "Qual o nome do bruxo que é o principal vilão em Harry Potter?", answers: ["Dumbledore", "Snape", "Voldemort", "Sirius Black"], correct: 2 },
+                    { question: "Quem dirigiu 'Pulp Fiction'?", answers: ["Steven Spielberg", "Martin Scorsese", "Quentin Tarantino", "James Cameron"], correct: 2},
+                    { question: "Qual destes não é um membro dos Vingadores originais do cinema?", answers: ["Capitão América", "Homem-Formiga", "Viúva Negra", "Hulk"], correct: 1},
+                    { question: "Quem canta a música 'Like a Virgin'?", answers: ["Whitney Houston", "Cyndi Lauper", "Mariah Carey", "Madonna"], correct: 3},
+                    { question: "Qual o nome do boneco de madeira que queria ser um menino de verdade?", answers: ["Gepeto", "Grilo Falante", "Pinóquio", "Figaro"], correct: 2},
+                    { question: "Em que cidade se passa a série 'La Casa de Papel'?", answers: ["Barcelona", "Madrid", "Lisboa", "Rio de Janeiro"], correct: 1},
+                    { question: "Qual o nome do leão protagonista de 'O Rei Leão'?", answers: ["Mufasa", "Scar", "Simba", "Timão"], correct: 2},
+                    { question: "Que artista é conhecido pela obra 'O Grito'?", answers: ["Edvard Munch", "Salvador Dalí", "Frida Kahlo", "Claude Monet"], correct: 0},
+                    { question: "Qual o nome do carro de 'Regresso ao Futuro'?", answers: ["Ford Mustang", "Ferrari 250 GTO", "Pontiac Trans Am", "DeLorean"], correct: 3},
+                    { question: "Qual o nome da personagem principal da saga 'Jogos da Fome'?", answers: ["Primrose Everdeen", "Katniss Everdeen", "Gale Hawthorne", "Peeta Mellark"], correct: 1},
+                    { question: "Quem compôs 'As Quatro Estações'?", answers: ["Bach", "Mozart", "Beethoven", "Vivaldi"], correct: 3}
+                ]
+            },
         ciencia: {
           name: "Ciência e Tecnologia",
           questions: [
@@ -360,7 +429,6 @@
             <div className="w-full max-w-3xl">
               {/* Header */}
               <div className="flex items-center justify-between mb-4 text-white/80">
-                <div className="text-sm tracking-wide">AR-KN Quiz • Firebase Multiplayer</div>
                 <div className="flex items-center gap-3">
                   <div className="text-xs">Sala: <span className="font-mono">{room || "—"}</span></div>
                   {user ? (
@@ -377,8 +445,8 @@
 
               {screen === "lobby" && (
                 <Card className="text-center">
-                  <h1 className="text-4xl font-extrabold mb-2">Quiz em Família!</h1>
-                  <p className="text-white/70 mb-8">Sem servidor. Cole sua config do Firebase acima e jogue.</p>
+                  <h1 className="text-4xl font-extrabold mb-2">QuizVerso</h1>
+                  <p className="text-white/70 mb-8">Jogo é jogado, Lambarí é pescado.</p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                     <div>
@@ -559,3 +627,4 @@
     </script>
   </body>
 </html>
+
