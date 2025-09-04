@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Quiz Multiplayer (Firebase • Login Google + Histórico)</title>
+    <title>Quiz Multiplayer (Firebase • Login Google + Recorde por Quiz)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -32,22 +32,17 @@
       const { useState, useRef, useEffect } = React;
 
       // 🔧 COLE SUA CONFIG DO FIREBASE AQUI
-const firebaseConfig = {
-  apiKey: "AIzaSyBu2s6DU9d-hc5HTqSuyYLV6Ut0oOwRIls",
-  authDomain: "quizmultijogador.firebaseapp.com",
-  databaseURL: "https://quizmultijogador-default-rtdb.firebaseio.com",
-  projectId: "quizmultijogador",
-  storageBucket: "quizmultijogador.firebasestorage.app",
-  messagingSenderId: "245519129065",
-  appId: "1:245519129065:web:95727cf109edad07f29378",
-  measurementId: "G-0BRETH5CW3"
-};
+      const firebaseConfig = {
+        apiKey: "COLE_AQUI",
+        authDomain: "SEU-PROJETO.firebaseapp.com",
+        databaseURL: "https://SEU-PROJETO-default-rtdb.firebaseio.com",
+        projectId: "SEU-PROJETO",
+        appId: "COLE_AQUI"
+      };
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
       const auth = firebase.auth();
       const googleProvider = new firebase.auth.GoogleAuthProvider();
-
-      databaseURL: "https://quizmultijogador-default-rtdb.firebaseio.com/"
 
       // 📚 DATASET DEMO (2 quizes)
       const QUIZZES = {
@@ -113,6 +108,7 @@ const firebaseConfig = {
         const [started, setStarted] = useState(false);
         const [joinCode, setJoinCode] = useState("");
 
+        const [userBest, setUserBest] = useState({}); // 🏆 recordes por quiz do usuário logado
         const savedOnceRef = useRef(false);
 
         const pid = user?.uid || playerIdFallback; // usa UID do Google se tiver login
@@ -124,6 +120,21 @@ const firebaseConfig = {
           });
           return unsub;
         }, [name]);
+
+        // Carrega recordes do usuário por quiz
+        useEffect(() => {
+          async function fetchBests(u) {
+            if (!u) { setUserBest({}); return; }
+            const themes = Object.keys(QUIZZES);
+            const snaps = await Promise.all(
+              themes.map((t) => db.ref(`leaderboards/${t}/${u.uid}`).once("value"))
+            );
+            const map = {};
+            themes.forEach((t, i) => { const v = snaps[i].val(); map[t] = v?.points || 0; });
+            setUserBest(map);
+          }
+          fetchBests(user);
+        }, [user]);
 
         const quiz = selectedQuizKey ? QUIZZES[selectedQuizKey] : null;
         const total = quiz?.questions.length ?? 0;
@@ -175,7 +186,6 @@ const firebaseConfig = {
         }
 
         function handleCreate(){
-          // opcional: exigir login → if (!user) return alert("Entre com o Google primeiro.");
           if (!name.trim()) return alert("Digite seu nome");
           const rid = gameCode;
           const { players } = roomRefs(rid);
@@ -186,7 +196,6 @@ const firebaseConfig = {
         }
 
         function handleJoin(){
-          // opcional: exigir login → if (!user) return alert("Entre com o Google primeiro.");
           if (!name.trim()) return alert("Digite seu nome");
           if (!joinCode.trim()) return alert("Digite o código da sala");
           const rid = joinCode.trim().toUpperCase();
@@ -197,17 +206,29 @@ const firebaseConfig = {
           listenRoom(rid);
         }
 
-        function startGameHost(){
+        // 🔁 Host: inicia (zera pontos de todos -> pontuação POR QUIZ)
+        async function startGameHost(){
           if (!selectedQuizKey || !quiz) return;
           const rid = room || gameCode;
           const { state, answers, players } = roomRefs(rid);
+
+          // ZERA a pontuação de todos os jogadores da sala (para este novo quiz)
+          const snap = await players.once("value");
+          const updates = {};
+          snap.forEach((child) => { updates[child.key + "/points"] = 0; });
+          if (Object.keys(updates).length) await players.update(updates);
+
+          // inicia estado do quiz
           state.set({ started:true, qid:0, correct: quiz.questions[0].c, theme: selectedQuizKey, end:false });
           savedOnceRef.current = false;
+
+          // watchers de respostas da Q0
           answers(0).off();
           answers(0).on("child_added", (snap)=>{
             const { choice } = snap.val()||{}; const pidAns = snap.key;
             if (Number(choice) === Number(quiz.questions[0].c)) players.child(pidAns).child("points").transaction(p => (p||0)+1);
           });
+
           setScreen("game");
         }
 
@@ -266,6 +287,10 @@ const firebaseConfig = {
               };
             }
             return curr;
+          }, (err, committed, snap) => {
+            // Atualiza cache local para refletir o novo recorde
+            const best = snap?.val()?.points || myPoints;
+            setUserBest(prev => ({ ...prev, [theme]: Math.max(prev[theme] || 0, best) }));
           });
         }
 
@@ -340,16 +365,36 @@ const firebaseConfig = {
                     <div className="mt-6">
                       <h3 className="text-xl font-semibold mb-2">Escolha o Tema do Quiz:</h3>
                       <div className="grid grid-cols-1 gap-2 mb-4">
-                        {Object.entries(QUIZZES).map(([key, q]) => (
-                          <button key={key} onClick={() => setSelectedQuizKey(key)}
-                            className={`text-left px-4 py-3 rounded-xl border transition transform ${selectedQuizKey === key ? "bg-indigo-600/90 text-white border-indigo-400 shadow-lg scale-[1.01]" : "bg-white/5 text-white/90 hover:bg-white/10 border-white/10"}`}>
-                            <div className="flex items-center justify-between">
-                              <div className="font-semibold">{q.name}</div>
-                              <div className="text-xs opacity-75">{q.questions.length} questões</div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
+  {Object.entries(QUIZZES).map(([key, q]) => {
+    const totalQ = q.questions.length;
+    const best = userBest[key] ?? 0; // recorde pessoal carregado do /leaderboards
+    return (
+      <button
+        key={key}
+        onClick={() => setSelectedQuizKey(key)}
+        className={`text-left px-4 py-3 rounded-xl border transition transform ${
+          selectedQuizKey === key
+            ? "bg-indigo-600/90 text-white border-indigo-400 shadow-lg scale-[1.01]"
+            : "bg-white/5 text-white/90 hover:bg-white/10 border-white/10"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="font-semibold">{q.name}</div>
+          <div className="text-xs opacity-75 flex items-center gap-3">
+            {user ? (
+              <span className="inline-flex items-center gap-1">
+                <span className="text-yellow-300">🏆</span>
+                <span className="font-semibold">{best}/{totalQ}</span>
+                <span>melhor</span>
+              </span>
+            ) : null}
+            <span>{totalQ} questões</span>
+          </div>
+        </div>
+      </button>
+    );
+  })}
+</div>
                       <Button onClick={startGameHost} disabled={!selectedQuizKey} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Começar o Jogo!</Button>
                     </div>
                   ) : (
@@ -455,5 +500,3 @@ const firebaseConfig = {
     </script>
   </body>
 </html>
-
-
