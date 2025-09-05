@@ -475,6 +475,22 @@ body { font-family: 'Kanit', ui-sans-serif, system-ui, -apple-system, Segoe UI, 
         },
       };
 
+      // Aparência/descrição por quiz (opcional; se faltar algo, caímos em defaults)
+const QUIZ_META = {
+  geral:   { emoji: "🌍", tag: "Clássico",  grad: "from-indigo-500/30 to-cyan-500/30",  desc: "Perguntas gerais para todo mundo." },
+  ciencia: { emoji: "🔬", tag: "Ciência",   grad: "from-fuchsia-500/30 to-rose-500/30", desc: "Tecnologia, descobertas e curiosidades." },
+  // adicione aqui: chaveDoQuiz: { emoji, tag, grad, desc }
+};
+function quizMeta(key) {
+  const m = QUIZ_META[key] || {};
+  return {
+    emoji: m.emoji || "❓",
+    tag:   m.tag   || "Quiz",
+    grad:  m.grad  || "from-slate-500/30 to-slate-700/30",
+    desc:  m.desc  || (QUIZZES[key]?.name || "—"),
+  };
+}
+      
       // ✅ Normaliza questões para { q, a, c } e tolera { question, answers, correct }
       function normalizeQuizData(baseQuiz) {
         if (!baseQuiz) return null;
@@ -547,6 +563,9 @@ body { font-family: 'Kanit', ui-sans-serif, system-ui, -apple-system, Segoe UI, 
 
         const [userBest, setUserBest] = useState({}); // 🏆 recordes por quiz do usuário
         const savedOnceRef = useRef(false);
+        const [qSearch, setQSearch] = React.useState("");
+        const [sortBy, setSortBy]   = React.useState("name"); // name | questions | best
+
 
         // usa UID do Google se logado; senão, id temporário
         const pid = user?.uid || playerIdFallback;
@@ -677,31 +696,38 @@ body { font-family: 'Kanit', ui-sans-serif, system-ui, -apple-system, Segoe UI, 
           listenRoom(rid);
         }
 
-        // 🔁 Host: inicia (zera pontos de todos → pontuação POR QUIZ)
-        async function startGameHost(){
-          if (!selectedQuizKey || !quiz) return;
-          const rid = room || gameCode;
-          const { state, answers, players } = roomRefs(rid);
+        async function startGameHost(keyOverride){
+  const chosen = keyOverride || selectedQuizKey;
+  if (!chosen) return;
 
-          // ZERA a pontuação de todos os jogadores da sala (para este novo quiz)
-          const snap = await players.once("value");
-          const updates = {};
-          snap.forEach((child) => { updates[child.key + "/points"] = 0; });
-          if (Object.keys(updates).length) await players.update(updates);
+  const qz  = normalizeQuizData(QUIZZES[chosen]);
+  const rid = room || gameCode;
+  const { state, answers, players } = roomRefs(rid);
 
-          // inicia estado do quiz
-          state.set({ started:true, qid:0, correct: quiz.questions[0].c, theme: selectedQuizKey, end:false });
-          savedOnceRef.current = false;
+  // Zera pontuação da sala (pontuação por quiz)
+  const snap = await players.once("value");
+  const updates = {};
+  snap.forEach((child) => { updates[child.key + "/points"] = 0; });
+  if (Object.keys(updates).length) await players.update(updates);
 
-          // watchers de respostas da Q0
-          answers(0).off();
-          answers(0).on("child_added", (snap)=>{
-            const { choice } = snap.val()||{}; const pidAns = snap.key;
-            if (Number(choice) === Number(quiz.questions[0].c)) players.child(pidAns).child("points").transaction(p => (p||0)+1);
-          });
+  // Inicia estado do quiz
+  state.set({
+    started:true, qid:0, correct: qz.questions[0].c, theme: chosen, end:false
+  });
+  savedOnceRef.current = false;
 
-          setScreen("game");
-        }
+  // Watcher das respostas da Q0
+  answers(0).off();
+  answers(0).on("child_added", (snap)=>{
+    const { choice } = snap.val()||{}; const pidAns = snap.key;
+    if (Number(choice) === Number(qz.questions[0].c)) {
+      players.child(pidAns).child("points").transaction(p => (p||0)+1);
+    }
+  });
+
+  setSelectedQuizKey(chosen);
+  setScreen("game");
+}
 
         // Host: próxima pergunta
         function nextQuestionHost(){
@@ -950,20 +976,93 @@ async function shareResult() {
                   {isHost ? (
                     <div className="mt-6">
                       <h3 className="text-xl font-semibold mb-2">Escolha o Tema do Quiz:</h3>
-                      <div className="grid grid-cols-1 gap-2 mb-4">
-                        {Object.entries(QUIZZES).map(([key, q]) => {
-                          const totalQ = normalizeQuizData(q).questions.length;
-                          const best = userBest[key] ?? 0;
-                          return (
-                            <button
-                              key={key}
-                              onClick={() => setSelectedQuizKey(key)}
-                              className={`text-left px-4 py-3 rounded-xl border transition transform ${
-                                selectedQuizKey === key
-                                  ? "bg-indigo-600/90 text-white border-indigo-400 shadow-lg scale-[1.01]"
-                                  : "bg-white/5 text-white/90 hover:bg-white/10 border-white/10"
-                              }`}
-                            >
+
+{/* BUSCA + ORDENAR */}
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+  <div className="relative w-full sm:max-w-xs">
+    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60">🔎</span>
+    <input
+      className="input-ghost text-white w-full pl-9 pr-3 py-2.5 rounded-lg placeholder:text-white/50"
+      placeholder="Buscar quiz..."
+      value={qSearch}
+      onChange={(e)=>setQSearch(e.target.value)}
+    />
+  </div>
+  <div className="flex gap-2 text-xs">
+    <button onClick={()=>setSortBy("name")}
+      className={`btn-ghost px-3 py-2 rounded-lg ${sortBy==="name"?"ring-2 ring-indigo-400":""}`}>A–Z</button>
+    <button onClick={()=>setSortBy("questions")}
+      className={`btn-ghost px-3 py-2 rounded-lg ${sortBy==="questions"?"ring-2 ring-indigo-400":""}`}>+ questões</button>
+    <button onClick={()=>setSortBy("best")}
+      className={`btn-ghost px-3 py-2 rounded-lg ${sortBy==="best"?"ring-2 ring-indigo-400":""}`}>meus recordes</button>
+  </div>
+</div>
+
+{/* GRID DE CARDS */}
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+  {Object.entries(QUIZZES)
+    .map(([key, q]) => ({ key, q: normalizeQuizData(q) }))
+    .filter(({q}) => {
+      const t = qSearch.trim().toLowerCase();
+      return t ? (q.name.toLowerCase().includes(t)) : true;
+    })
+    .sort((a,b) => {
+      if (sortBy==="questions") return b.q.questions.length - a.q.questions.length;
+      if (sortBy==="best") {
+        const ar=(userBest[a.key]||0)/(a.q.questions.length||1);
+        const br=(userBest[b.key]||0)/(b.q.questions.length||1);
+        return br - ar;
+      }
+      return a.q.name.localeCompare(b.q.name);
+    })
+    .map(({key, q})=>{
+      const meta   = quizMeta(key);
+      const totalQ = q.questions.length;
+      const best   = userBest[key] ?? 0;
+      const active = selectedQuizKey === key;
+
+      return (
+        <div
+          key={key}
+          className={`relative rounded-2xl border p-4 overflow-hidden cursor-pointer transition bg-gradient-to-br ${meta.grad}
+                      ${active ? "border-indigo-300 ring-2 ring-indigo-400 shadow-lg shadow-indigo-900/30"
+                               : "border-white/10 hover:border-white/30"}`}
+          onClick={()=>setSelectedQuizKey(key)}
+        >
+          {/* header */}
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 grid place-items-center rounded-xl bg-black/20 text-lg">{meta.emoji}</div>
+              <div>
+                <div className="font-semibold">{q.name}</div>
+                <div className="text-xs text-white/70">{meta.tag} • {totalQ} questões</div>
+              </div>
+            </div>
+            <div className="text-xs bg-black/20 px-2 py-1 rounded-lg">🏆 {best}/{totalQ}</div>
+          </div>
+
+          {/* descrição */}
+          <div className="text-xs text-white/80 mt-3">{meta.desc}</div>
+
+          {/* ações */}
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Button size="lg" variant="primary" className="!py-2" onClick={()=>setSelectedQuizKey(key)}>
+              Selecionar
+            </Button>
+            <Button size="lg" variant="ghost" className="!py-2" onClick={()=>startGameHost(key)}>
+              Jogar agora
+            </Button>
+          </div>
+        </div>
+      );
+  })}
+</div>
+
+{/* CTA principal continua valendo */}
+<Button size="lg" variant="primary" onClick={()=>startGameHost()} disabled={!selectedQuizKey}>
+  Começar o Jogo!
+</Button>
+
                               <div className="flex items-center justify-between gap-3">
                                 <div className="font-semibold">{q.name}</div>
                                 <div className="text-xs opacity-75 flex items-center gap-3">
@@ -1105,6 +1204,7 @@ async function shareResult() {
     </script>
   </body>
 </html>
+
 
 
 
