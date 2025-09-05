@@ -560,12 +560,11 @@ function quizMeta(key) {
         const [picked, setPicked] = useState(null);
         const [started, setStarted] = useState(false);
         const [joinCode, setJoinCode] = useState("");
-
-        const [userBest, setUserBest] = useState({}); // 🏆 recordes por quiz do usuário
-        const savedOnceRef = useRef(false);
         const [qSearch, setQSearch] = React.useState("");
         const [sortBy, setSortBy]   = React.useState("name"); // name | questions | best
 
+        const [userBest, setUserBest] = useState({}); // 🏆 recordes por quiz do usuário
+        const savedOnceRef = useRef(false);
 
         // usa UID do Google se logado; senão, id temporário
         const pid = user?.uid || playerIdFallback;
@@ -972,9 +971,7 @@ async function shareResult() {
                       </li>
                     ))}
                   </ul>
-
-                  {isHost ? (
-                    <div className="mt-6">
+                  
                       <h3 className="text-xl font-semibold mb-2">Escolha o Tema do Quiz:</h3>
 
 {/* BUSCA + ORDENAR */}
@@ -1063,20 +1060,6 @@ async function shareResult() {
   Começar o Jogo!
 </Button>
 
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="font-semibold">{q.name}</div>
-                                <div className="text-xs opacity-75 flex items-center gap-3">
-                                  {user ? (
-                                    <span className="inline-flex items-center gap-1">
-                                      <span className="text-yellow-300">🏆</span>
-                                      <span className="font-semibold">{best}/{totalQ}</span>
-                                      <span>melhor</span>
-                                    </span>
-                                  ) : null}
-                                  <span>{totalQ} questões</span>
-                                </div>
-                              </div>
-                            </button>
                           );
                         })}
                       </div>
@@ -1204,6 +1187,7 @@ async function shareResult() {
     </script>
   </body>
 </html>
+
 
 
 
