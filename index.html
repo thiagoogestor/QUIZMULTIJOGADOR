@@ -479,9 +479,9 @@ body { font-family: 'Kanit', ui-sans-serif, system-ui, -apple-system, Segoe UI, 
         function resetUI(){ setScreen("waiting"); setSelectedQuizKey(null); setQid(0); setPicked(null); }
 
         return (
-          <div className="p-6 flex items-center justify-center">
+          <div className="min-h-[100svh] p-4 md:p-6 flex items-center justify-center">
              <BackdropFX />
-            <div className="w-full max-w-3xl">
+            <div className="w-full max-w-5xl">
               {/* Header */}
               <div className="flex items-center justify-between mb-4 text-white/80">
                 <div className="flex items-center gap-3">
@@ -499,7 +499,12 @@ body { font-family: 'Kanit', ui-sans-serif, system-ui, -apple-system, Segoe UI, 
               </div>
 
               {screen === "lobby" && (
-  <div className="glass p-8 md:p-10 w-full max-w-3xl relative">
+  <div
+  className="glass relative w-full max-w-5xl
+             h-[calc(100svh-120px)] md:h-[calc(100svh-140px)]
+             p-6 sm:p-8 md:p-10 flex flex-col justify-center
+             rounded-none md:rounded-2xl"
+>
     <div className="shine" />
 
     {/* LOGO / TÍTULO */}
@@ -728,6 +733,7 @@ body { font-family: 'Kanit', ui-sans-serif, system-ui, -apple-system, Segoe UI, 
     </script>
   </body>
 </html>
+
 
 
 
