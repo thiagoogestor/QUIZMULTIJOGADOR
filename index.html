@@ -880,7 +880,6 @@ async function shareResult() {
   <div className="glass relative w-full max-w-lg p-6 sm:p-8 md:p-10 flex flex-col justify-center rounded-2xl">
     <div className="shine" />
 
-    {/* TÍTULO */}
     <div className="text-center mb-6">
       <div className="inline-flex items-center gap-3">
         <span className="w-10 h-10 grid place-items-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-800/40 floating">?</span>
@@ -891,9 +890,7 @@ async function shareResult() {
       </p>
     </div>
 
-    {/* SEÇÃO DE IDENTIFICAÇÃO */}
     <div>
-      {/* Input de Nome */}
       <input
         className="input-ghost text-center text-white w-full px-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-400/40 placeholder:text-white/50"
         value={name}
@@ -901,14 +898,12 @@ async function shareResult() {
         placeholder="👤 Digite seu nome"
       />
 
-      {/* Divisor "OU" */}
       <div className="flex items-center my-4 text-sm text-white/50">
         <hr className="flex-1 border-white/20" />
         <span className="px-3">OU</span>
         <hr className="flex-1 border-white/20" />
       </div>
 
-      {/* Botão Google */}
       <button
         onClick={signInGoogle}
         className="w-full px-5 py-3 rounded-full font-semibold bg-white text-slate-800 inline-flex items-center justify-center gap-3 hover:bg-slate-200 transition"
@@ -918,7 +913,6 @@ async function shareResult() {
       </button>
     </div>
 
-    {/* CAMPO DE CÓDIGO (CONDICIONAL) */}
     {isJoining && (
       <div className="mt-4">
         <input
@@ -930,7 +924,6 @@ async function shareResult() {
       </div>
     )}
 
-    {/* BOTÃO DE AÇÃO PRINCIPAL (DINÂMICO) */}
     <div className="mt-6">
       <button
         onClick={isJoining ? handleJoin : handleCreate}
@@ -940,7 +933,6 @@ async function shareResult() {
       </button>
     </div>
 
-    {/* LINK PARA ALTERNAR O MODO */}
     <div className="mt-5 text-center text-sm text-white/80">
       {isJoining ? (
         <a href="#" onClick={(e) => { e.preventDefault(); setIsJoining(false); }} className="underline hover:text-white">
@@ -1133,6 +1125,7 @@ async function shareResult() {
     </script>
   </body>
 </html>
+
 
 
 
