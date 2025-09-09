@@ -1546,6 +1546,7 @@ body { font-family: 'Kanit', ui-sans-serif, system-ui, -apple-system, Segoe UI, 
         const [picked, setPicked] = useState(null);
         const [started, setStarted] = useState(false);
         const [joinCode, setJoinCode] = useState("");
+        const [isJoining, setIsJoining] = useState(false);
 
         const [userBest, setUserBest] = useState({}); // 🏆 recordes por quiz do usuário
         const savedOnceRef = useRef(false);
@@ -1853,77 +1854,82 @@ async function shareResult() {
                 </div>
               </div>
 
-             {screen === "lobby" && (
-  <div
-  className="glass relative w-full max-w-5xl
-             h-[calc(100svh-120px)] md:h-[calc(100svh-140px)]
-             p-6 sm:p-8 md:p-10 flex flex-col justify-center
-             rounded-none md:rounded-2xl"
->
+            // COLE ESTE NOVO BLOCO NO LUGAR
+{screen === "lobby" && (
+  <div className="glass relative w-full max-w-lg p-6 sm:p-8 md:p-10 flex flex-col justify-center rounded-2xl">
     <div className="shine" />
 
-    {/* LOGO / TÍTULO */}
+    {/* TÍTULO */}
     <div className="text-center mb-6">
       <div className="inline-flex items-center gap-3">
         <span className="w-10 h-10 grid place-items-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-800/40 floating">?</span>
         <h1 className="text-4xl md:text-5xl font-extrabold gradient-title tracking-tight">QuizVerso</h1>
       </div>
-      <p className="text-white/70 mt-2">Jogo é jogado. Lambarí é pescado.</p>
+      <p className="text-white/70 mt-2">
+        {isJoining ? "Entre na sala para começar a jogar!" : "Comece um novo desafio!"}
+      </p>
     </div>
 
-    {/* FORM */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-      <div>
-        <div className="text-sm text-white/70 mb-1">Seu nome</div>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60">👤</span>
-          <input
-            className="input-ghost text-white w-full pl-9 pr-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-400/40 placeholder:text-white/50"
-            value={name}
-            onChange={(e)=>setName(e.target.value)}
-            placeholder="Digite seu nome"
-          />
-        </div>
-      </div>
-      <div>
-        <div className="text-sm text-white/70 mb-1">Código da sala (se tiver)</div>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60">🔑</span>
-          <input
-            className="input-ghost text-white w-full pl-9 pr-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-cyan-400/30 placeholder:text-white/50"
-            value={joinCode}
-            onChange={(e)=>setJoinCode(e.target.value.toUpperCase())}
-            placeholder="ABCD1"
-          />
-        </div>
-      </div>
-    </div>
+    {/* SEÇÃO DE IDENTIFICAÇÃO */}
+    <div>
+      {/* Input de Nome */}
+      <input
+        className="input-ghost text-center text-white w-full px-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-400/40 placeholder:text-white/50"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="👤 Digite seu nome"
+      />
 
-    {/* AÇÕES */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
+      {/* Divisor "OU" */}
+      <div className="flex items-center my-4 text-sm text-white/50">
+        <hr className="flex-1 border-white/20" />
+        <span className="px-3">OU</span>
+        <hr className="flex-1 border-white/20" />
+      </div>
+
+      {/* Botão Google */}
       <button
-        onClick={handleCreate}
+        onClick={signInGoogle}
+        className="w-full px-5 py-3 rounded-full font-semibold bg-white text-slate-800 inline-flex items-center justify-center gap-3 hover:bg-slate-200 transition"
+      >
+        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-5 h-5" />
+        Entrar com o Google
+      </button>
+    </div>
+
+    {/* CAMPO DE CÓDIGO (CONDICIONAL) */}
+    {isJoining && (
+      <div className="mt-4">
+        <input
+          className="input-ghost text-center font-mono tracking-widest text-white w-full px-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-cyan-400/30 placeholder:text-white/50"
+          value={joinCode}
+          onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+          placeholder="🔑 DIGITE O CÓDIGO"
+        />
+      </div>
+    )}
+
+    {/* BOTÃO DE AÇÃO PRINCIPAL (DINÂMICO) */}
+    <div className="mt-6">
+      <button
+        onClick={isJoining ? handleJoin : handleCreate}
         className="btn-neo w-full px-5 py-3 rounded-full font-semibold text-white inline-flex items-center justify-center gap-2"
       >
-        <span>🚀</span> Criar Nova Sala
-      </button>
-
-      <button
-        onClick={handleJoin}
-        className="btn-ghost w-full px-5 py-3 rounded-full font-semibold text-white inline-flex items-center justify-center gap-2 hover:bg-white/15"
-      >
-        <span>🎮</span> Entrar na Sala
+        {isJoining ? <span>🎮 Entrar na Sala</span> : <span>🚀 Criar Jogo</span>}
       </button>
     </div>
 
-    <div className="mt-5 text-center text-xs text-white/70">
-      Dica: compartilhe o código <span className="font-mono text-white">{gameCode}</span> com os amigos.
-    </div>
-
-    <div className="mt-6 grid grid-cols-3 gap-3 text-xs text-white/60">
-      <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 text-center">💡 Multiplayer em tempo real</div>
-      <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 text-center">🏆 Recorde por quiz</div>
-      <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 text-center">🔒 Login Google</div>
+    {/* LINK PARA ALTERNAR O MODO */}
+    <div className="mt-5 text-center text-sm text-white/80">
+      {isJoining ? (
+        <a href="#" onClick={(e) => { e.preventDefault(); setIsJoining(false); }} className="underline hover:text-white">
+          Prefere criar uma nova sala?
+        </a>
+      ) : (
+        <a href="#" onClick={(e) => { e.preventDefault(); setIsJoining(true); }} className="underline hover:text-white">
+          Já tem um código? Entrar em uma sala
+        </a>
+      )}
     </div>
   </div>
 )}
@@ -2107,6 +2113,7 @@ async function shareResult() {
     </script>
   </body>
 </html>
+
 
 
 
