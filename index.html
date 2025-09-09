@@ -1835,25 +1835,121 @@ async function shareResult() {
 }
         
         return (
-          <div className="min-h-[100svh] p-4 md:p-6 flex items-center justify-center">
-             <BackdropFX />
-            <div className="w-full max-w-5xl">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-4 text-white/80">
-                <div className="flex items-center gap-3">
-                  <div className="text-xs">Sala: <span className="font-mono">{room || "—"}</span></div>
-                  {user ? (
-                    <div className="flex items-center gap-2">
-                      {user.photoURL && <img src={user.photoURL} alt="avatar" className="w-6 h-6 rounded-full" />}
-                      <span className="text-xs">{user.displayName || "Você"}</span>
-                      <button onClick={signOutGoogle} className="text-xs underline hover:opacity-80">Sair</button>
-                    </div>
-                  ) : (
-                    <button onClick={signInGoogle} className="text-xs underline hover:opacity-80">Entrar com Google</button>
-                  )}
-                </div>
-              </div>
+  <div className="min-h-[100svh] bg-gradient-to-br from-slate-900 via-indigo-900 to-fuchsia-900 bg-grid p-4 md:p-6 flex flex-col items-center justify-center">
+    <BackdropFX />
 
+    {/* ===== NOVO CONTÊINER PRINCIPAL ===== */}
+    {/* Este 'div' agora controla o alinhamento de tudo que está dentro dele */}
+    <div className="w-full max-w-lg mx-auto">
+
+      {/* ===== HEADER APRIMORADO ===== */}
+      <div className="flex items-center justify-between mb-4 text-white/80 px-4">
+        <div className="flex items-center gap-3 text-xs">
+          <span>Sala: </span>
+          <span className="font-mono">{room || "—"}</span>
+        </div>
+        <div>
+          {user ? (
+            <div className="flex items-center gap-2">
+              {user.photoURL && <img src={user.photoURL} alt="avatar" className="w-6 h-6 rounded-full" />}
+              <span className="text-xs font-semibold">{user.displayName || "Você"}</span>
+              <button onClick={signOutGoogle} className="text-xs underline hover:opacity-80">Sair</button>
+            </div>
+          ) : (
+            <button onClick={signInGoogle} className="text-xs underline hover:opacity-80">Entrar com Google</button>
+          )}
+        </div>
+      </div>
+
+      {/* ===== RENDERIZAÇÃO DAS TELAS ===== */}
+      <div className="w-full">
+        {screen === "lobby" && (
+          <div className="glass relative p-6 sm:p-8 md:p-10 flex flex-col justify-center rounded-2xl">
+            <div className="shine" />
+            
+            {/* Título */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-3">
+                <span className="w-10 h-10 grid place-items-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-800/40 floating">?</span>
+                <h1 className="text-4xl md:text-5xl font-extrabold gradient-title tracking-tight">QuizVerso</h1>
+              </div>
+              <p className="text-white/70 mt-2">
+                {isJoining ? "Entre na sala para começar a jogar!" : "Comece um novo desafio!"}
+              </p>
+            </div>
+
+            {/* ===== CONTÊINER DO FORMULÁRIO (GARANTE LARGURA CONSISTENTE) ===== */}
+            <div className="w-full max-w-sm mx-auto">
+              
+              {/* Mostra input de nome apenas se não estiver logado */}
+              {!user && (
+                 <input
+                  className="input-ghost text-center text-white w-full px-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-400/40 placeholder:text-white/50"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="👤 Digite seu nome"
+                />
+              )}
+
+              {/* Se o usuário estiver logado, mostra o nome dele de forma elegante */}
+              {user && (
+                <div className="text-center bg-white/5 border border-white/10 rounded-lg py-3 mb-4">
+                  <span className="font-semibold text-white">{user.displayName}</span>
+                </div>
+              )}
+
+              {/* Esconde "OU" e botão "Entrar com Google" se já estiver logado */}
+              {!user && (
+                <>
+                  <div className="flex items-center my-4 text-sm text-white/50">
+                    <hr className="flex-1 border-white/20" />
+                    <span className="px-3">OU</span>
+                    <hr className="flex-1 border-white/20" />
+                  </div>
+                  <button
+                    onClick={signInGoogle}
+                    className="w-full px-5 py-3 rounded-full font-semibold bg-white text-slate-800 inline-flex items-center justify-center gap-3 hover:bg-slate-200 transition"
+                  >
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-5 h-5" />
+                    Entrar com o Google
+                  </button>
+                </>
+              )}
+              
+              {isJoining && (
+                <div className="mt-4">
+                  <input
+                    className="input-ghost text-center font-mono tracking-widest text-white w-full px-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-cyan-400/30 placeholder:text-white/50"
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                    placeholder="🔑 DIGITE O CÓDIGO"
+                  />
+                </div>
+              )}
+
+              <div className="mt-6">
+                <button
+                  onClick={isJoining ? handleJoin : handleCreate}
+                  className="btn-neo w-full px-5 py-3 rounded-full font-semibold text-white inline-flex items-center justify-center gap-2"
+                >
+                  {isJoining ? <span>🎮 Entrar na Sala</span> : <span>🚀 Criar Jogo</span>}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-5 text-center text-sm text-white/80">
+              {isJoining ? (
+                <a href="#" onClick={(e) => { e.preventDefault(); setIsJoining(false); }} className="underline hover:text-white">
+                  Prefere criar uma nova sala?
+                </a>
+              ) : (
+                <a href="#" onClick={(e) => { e.preventDefault(); setIsJoining(true); }} className="underline hover:text-white">
+                  Já tem um código? Entrar em uma sala
+                </a>
+              )}
+            </div>
+          </div>
+        )}
 {screen === "lobby" && (
   <div className="glass relative w-full max-w-lg p-6 sm:p-8 md:p-10 flex flex-col items-center justify-center rounded-2xl mx-auto">
     <div className="shine" />
@@ -1932,8 +2028,7 @@ async function shareResult() {
     </div>
   </div>
 )}
-
-  
+        
               {screen === "waiting" && (
                 <Card>
                   <h2 className="text-2xl font-bold mb-2">Sala de Espera</h2>
@@ -2112,6 +2207,7 @@ async function shareResult() {
     </script>
   </body>
 </html>
+
 
 
 
