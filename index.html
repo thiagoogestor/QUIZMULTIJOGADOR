@@ -1529,479 +1529,587 @@ body { font-family: 'Kanit', ui-sans-serif, system-ui, -apple-system, Segoe UI, 
   );
 }
 
-     function App() {
-    // ----- SEUS ESTADOS E LÓGICAS (PERMANECEM OS MESMOS) -----
-    const [screen, setScreen] = useState("lobby");
-    const [name, setName] = useState("");
-    const [isHost, setIsHost] = useState(true);
-    const [gameCode, setGameCode] = useState(() => Math.random().toString(36).slice(2, 7).toUpperCase());
-    const [selectedQuizKey, setSelectedQuizKey] = useState(null);
-    const [copied, setCopied] = useState(false);
-    const [user, setUser] = useState(null);
-    const [playerIdFallback] = useState(() => Math.random().toString(36).slice(2, 10));
-    const [room, setRoom] = useState("");
-    const [players, setPlayers] = useState([]);
-    const [qid, setQid] = useState(0);
-    const [picked, setPicked] = useState(null);
-    const [started, setStarted] = useState(false);
-    const [joinCode, setJoinCode] = useState("");
-    const [isJoining, setIsJoining] = useState(false); // Estado para o novo lobby
-    const [userBest, setUserBest] = useState({});
-    const savedOnceRef = useRef(false);
-    const pid = user?.uid || playerIdFallback;
+ function App() {
+        
+        const [screen, setScreen] = useState("lobby");
+        const [name, setName] = useState("");
+        const [isHost, setIsHost] = useState(true);
+        const [gameCode, setGameCode] = useState(() => Math.random().toString(36).slice(2,7).toUpperCase());
+        const [selectedQuizKey, setSelectedQuizKey] = useState(null);
+        const [copied, setCopied] = useState(false);
 
-    // ----- SUAS FUNÇÕES (PERMANECEM AS MESMAS) -----
-    useEffect(() => {
-      const unsub = auth.onAuthStateChanged(async (u) => {
-        setUser(u);
-        if (u && !name) setName(u.displayName || (u.email ? u.email.split("@")[0] : "Jogador"));
-        if (u && room) { await bindPlayerToUidIfNeeded(u); }
-      });
-      return unsub;
-    }, [name, room]);
-    useEffect(() => {
-      async function fetchBests(u) {
-        if (!u) { setUserBest({}); return; }
-        const themes = Object.keys(QUIZZES);
-        const snaps = await Promise.all(themes.map((t) => db.ref(`leaderboards/${t}/${u.uid}`).once("value")));
-        const map = {};
-        themes.forEach((t, i) => { const v = snaps[i].val(); map[t] = v?.points || 0; });
-        setUserBest(map);
-      }
-      fetchBests(user);
-    }, [user]);
-    const quiz = normalizeQuizData(selectedQuizKey ? QUIZZES[selectedQuizKey] : null);
-    const total = quiz?.questions.length ?? 0;
-    const current = quiz?.questions[qid];
-    const pct = total ? Math.round(((qid + 1) / total) * 100) : 0;
-    async function copyCode(){ try{ await navigator.clipboard.writeText(room || gameCode); setCopied(true); setTimeout(()=>setCopied(false),1500);}catch{} }
-    async function signInGoogle(){ try{ await auth.signInWithPopup(googleProvider); } catch{ await auth.signInWithRedirect(googleProvider); } }
-    function signOutGoogle(){ auth.signOut(); }
-    const roomRefs = (rid) => ({
-      players: db.ref(`rooms/${rid}/players`),
-      state:   db.ref(`rooms/${rid}/state`),
-      answers: (q) => db.ref(`rooms/${rid}/answers/${q}`),
-    });
-    function listenRoom(rid){
-      const { players, state } = roomRefs(rid);
-      players.on("value", (snap)=>{
-        const val = snap.val() || {};
-        const arr = Object.entries(val).map(([id,p])=>({ id, name:p.name, points:p.points|0 }));
-        setPlayers(arr);
-      });
-      state.on("value", (snap)=>{
-        const s = snap.val() || { started:false, qid:0 };
-        const startedNow = !!s.started;
-        if (s.theme) setSelectedQuizKey(s.theme);
-        const key = s.theme || selectedQuizKey;
-        const totalQ = key && QUIZZES[key] ? normalizeQuizData(QUIZZES[key]).questions.length : 0;
-        setStarted(startedNow);
-        setQid(s.qid|0);
-        setPicked(null);
-        if (startedNow) {
-          setScreen("game");
-          savedOnceRef.current = false;
-        } else {
-          const isEnd = (s.end === true) || (typeof s.qid === "number" && totalQ > 0 && s.qid >= totalQ);
-          if (isEnd) {
-            setScreen("end");
-            saveFinalScoreIfNeeded({ theme: key, totalQ, ended: true });
+        const [user, setUser] = useState(null);
+        const [playerIdFallback] = useState(() => Math.random().toString(36).slice(2,10)); // id temporário p/ quem joga sem login
+        const [room, setRoom] = useState("");
+        const [players, setPlayers] = useState([]);
+        const [qid, setQid] = useState(0);
+        const [picked, setPicked] = useState(null);
+        const [started, setStarted] = useState(false);
+        const [joinCode, setJoinCode] = useState("");
+        const [isJoining, setIsJoining] = useState(false);
+
+        const [userBest, setUserBest] = useState({}); // 🏆 recordes por quiz do usuário
+        const savedOnceRef = useRef(false);
+
+        // usa UID do Google se logado; senão, id temporário
+        const pid = user?.uid || playerIdFallback;
+
+        // Login → seta user, preenche nome, e se já estiver numa sala, faz bind fallback→uid
+        useEffect(() => {
+          const unsub = auth.onAuthStateChanged(async (u) => {
+            setUser(u);
+            if (u && !name) setName(u.displayName || (u.email ? u.email.split("@")[0] : "Jogador"));
+            if (u && room) { await bindPlayerToUidIfNeeded(u); }
+          });
+          return unsub;
+        }, [name, room]);
+
+        // Carrega recordes do usuário por quiz (leaderboards/{quiz}/{uid})
+        useEffect(() => {
+          async function fetchBests(u) {
+            if (!u) { setUserBest({}); return; }
+            const themes = Object.keys(QUIZZES);
+            const snaps = await Promise.all(themes.map((t) => db.ref(`leaderboards/${t}/${u.uid}`).once("value")));
+            const map = {};
+            themes.forEach((t, i) => { const v = snaps[i].val(); map[t] = v?.points || 0; });
+            setUserBest(map);
+          }
+          fetchBests(user);
+        }, [user]);
+
+        // Normaliza o quiz selecionado
+        const quiz = normalizeQuizData(selectedQuizKey ? QUIZZES[selectedQuizKey] : null);
+        const total = quiz?.questions.length ?? 0;
+        const current = quiz?.questions[qid];
+        const pct = total ? Math.round(((qid + 1) / total) * 100) : 0;
+
+        async function copyCode(){ try{ await navigator.clipboard.writeText(room || gameCode); setCopied(true); setTimeout(()=>setCopied(false),1500);}catch{} }
+        async function signInGoogle(){ try{ await auth.signInWithPopup(googleProvider); } catch{ await auth.signInWithRedirect(googleProvider); } }
+        function signOutGoogle(){ auth.signOut(); }
+
+        const roomRefs = (rid) => ({
+          players: db.ref(`rooms/${rid}/players`),
+          state:   db.ref(`rooms/${rid}/state`),
+          answers: (q) => db.ref(`rooms/${rid}/answers/${q}`),
+        });
+
+        function listenRoom(rid){
+          const { players, state } = roomRefs(rid);
+          players.on("value", (snap)=>{
+            const val = snap.val() || {};
+            const arr = Object.entries(val).map(([id,p])=>({ id, name:p.name, points:p.points|0 }));
+            setPlayers(arr);
+          });
+          state.on("value", (snap)=>{
+            const s = snap.val() || { started:false, qid:0 };
+            const startedNow = !!s.started;
+
+            // sincroniza tema pra todos
+            if (s.theme) setSelectedQuizKey(s.theme);
+
+            const key = s.theme || selectedQuizKey;
+            const totalQ = key && QUIZZES[key] ? normalizeQuizData(QUIZZES[key]).questions.length : 0;
+
+            setStarted(startedNow);
+            setQid(s.qid|0);
+            setPicked(null);
+
+            if (startedNow) {
+              setScreen("game");
+              savedOnceRef.current = false; // nova partida
+            } else {
+              const isEnd = (s.end === true) || (typeof s.qid === "number" && totalQ > 0 && s.qid >= totalQ);
+              if (isEnd) {
+                setScreen("end");
+                saveFinalScoreIfNeeded({ theme: key, totalQ, ended: true });
+              }
+            }
+          });
+        }
+
+        async function bindPlayerToUidIfNeeded(u) {
+          try {
+            if (!u || !room) return;
+            const { players } = roomRefs(room);
+            const snap = await players.once("value");
+            const hasUid = snap.child(u.uid).exists();
+            const hasFallback = snap.child(playerIdFallback).exists();
+
+            // move pontos do nó temporário -> uid
+            if (!hasUid && hasFallback) {
+              const data = snap.child(playerIdFallback).val() || {};
+              const next = {
+                name: data.name || u.displayName || name || "Jogador",
+                points: (data.points | 0),
+              };
+              await players.child(u.uid).set(next);
+              await players.child(playerIdFallback).remove();
+              players.child(u.uid).onDisconnect().remove();
+            } else if (!hasUid) {
+              await players.child(u.uid).set({
+                name: u.displayName || name || "Jogador",
+                points: 0,
+              });
+              players.child(u.uid).onDisconnect().remove();
+            }
+          } catch (e) {
+            console.warn("bindPlayerToUidIfNeeded error:", e);
           }
         }
-      });
-    }
-    async function bindPlayerToUidIfNeeded(u) {
-      try {
-        if (!u || !room) return;
-        const { players } = roomRefs(room);
-        const snap = await players.once("value");
-        const hasUid = snap.child(u.uid).exists();
-        const hasFallback = snap.child(playerIdFallback).exists();
-        if (!hasUid && hasFallback) {
-          const data = snap.child(playerIdFallback).val() || {};
-          const next = { name: data.name || u.displayName || name || "Jogador", points: (data.points | 0) };
-          await players.child(u.uid).set(next);
-          await players.child(playerIdFallback).remove();
-          players.child(u.uid).onDisconnect().remove();
-        } else if (!hasUid) {
-          await players.child(u.uid).set({ name: u.displayName || name || "Jogador", points: 0 });
-          players.child(u.uid).onDisconnect().remove();
+
+        // Host: cria sala
+        function handleCreate(){
+          if (!name.trim()) return alert("Digite seu nome");
+          const rid = gameCode;
+          const { players } = roomRefs(rid);
+          players.child(pid).set({ name: user?.displayName || name, points:0 });
+          players.child(pid).onDisconnect().remove();
+          setRoom(rid); setIsHost(true); setScreen("waiting");
+          listenRoom(rid);
         }
-      } catch (e) { console.warn("bindPlayerToUidIfNeeded error:", e); }
-    }
-    function handleCreate(){
-      if (!name.trim()) return alert("Digite seu nome");
-      const rid = gameCode;
-      const { players } = roomRefs(rid);
-      players.child(pid).set({ name: user?.displayName || name, points:0 });
-      players.child(pid).onDisconnect().remove();
-      setRoom(rid); setIsHost(true); setScreen("waiting");
-      listenRoom(rid);
-    }
-    function handleJoin(){
-      if (!name.trim()) return alert("Digite seu nome");
-      if (!joinCode.trim()) return alert("Digite o código da sala");
-      const rid = joinCode.trim().toUpperCase();
-      const { players } = roomRefs(rid);
-      players.child(pid).set({ name: user?.displayName || name, points:0 });
-      players.child(pid).onDisconnect().remove();
-      setRoom(rid); setIsHost(false); setScreen("waiting");
-      listenRoom(rid);
-    }
-    async function startGameHost(){
-      if (!selectedQuizKey || !quiz) return;
-      const rid = room || gameCode;
-      const { state, answers, players } = roomRefs(rid);
-      const snap = await players.once("value");
-      const updates = {};
-      snap.forEach((child) => { updates[child.key + "/points"] = 0; });
-      if (Object.keys(updates).length) await players.update(updates);
-      state.set({ started:true, qid:0, correct: quiz.questions[0].c, theme: selectedQuizKey, end:false });
-      savedOnceRef.current = false;
-      answers(0).off();
-      answers(0).on("child_added", (snap)=>{
-        const { choice } = snap.val()||{}; const pidAns = snap.key;
-        if (Number(choice) === Number(quiz.questions[0].c)) players.child(pidAns).child("points").transaction(p => (p||0)+1);
-      });
-      setScreen("game");
-    }
-    function nextQuestionHost(){
-      const rid = room;
-      if (!quiz || !rid) return;
-      const next = qid + 1;
-      const { state, answers, players } = roomRefs(rid);
-      if (next >= total){
-        state.update({ started:false, qid: next, end:true, theme: selectedQuizKey });
-        setScreen("end");
-        saveFinalScoreIfNeeded({ theme: selectedQuizKey, totalQ: total, ended: true });
-        return;
-      }
-      state.set({ started:true, qid: next, correct: quiz.questions[next].c, theme: selectedQuizKey, end:false });
-      answers(next).off();
-      answers(next).on("child_added", (snap)=>{
-        const { choice } = snap.val()||{}; const pidAns = snap.key;
-        if (Number(choice) === Number(quiz.questions[next].c)) players.child(pidAns).child("points").transaction(p => (p||0)+1);
-      });
-      setPicked(null);
-    }
-    function chooseAnswer(i){
-      if (picked !== null) return;
-      setPicked(i);
-      if (!room || !started) return;
-      db.ref(`rooms/${room}/answers/${qid}/${pid}`).set({ choice: i, at: Date.now() });
-    }
-    function saveFinalScoreIfNeeded({ theme, totalQ, ended }) {
-      if (!user || !room || !ended || savedOnceRef.current) return;
-      savedOnceRef.current = true;
-      const entryByUid = players.find(p => p.id === pid);
-      const entryByFallback = players.find(p => p.id === playerIdFallback);
-      const myPoints = (entryByUid?.points ?? entryByFallback?.points ?? 0);
-      const payload = { theme, points: myPoints, totalQuestions: totalQ, room, at: Date.now(), displayName: user.displayName || name || "Jogador", uid: user.uid };
-      db.ref(`users/${user.uid}/results`).push(payload);
-      const lbRef = db.ref(`leaderboards/${theme}/${user.uid}`);
-      lbRef.transaction(curr => {
-        if (!curr || myPoints > (curr.points || 0)) {
-          return { points: myPoints, displayName: payload.displayName, photoURL: user.photoURL || null, uid: user.uid, updatedAt: Date.now() };
+
+        // Jogador: entra em sala
+        function handleJoin(){
+          if (!name.trim()) return alert("Digite seu nome");
+          if (!joinCode.trim()) return alert("Digite o código da sala");
+          const rid = joinCode.trim().toUpperCase();
+          const { players } = roomRefs(rid);
+          players.child(pid).set({ name: user?.displayName || name, points:0 });
+          players.child(pid).onDisconnect().remove();
+          setRoom(rid); setIsHost(false); setScreen("waiting");
+          listenRoom(rid);
         }
-        return curr;
-      }, (err, committed, snap) => {
-        const best = snap?.val()?.points ?? myPoints;
-        setUserBest(prev => ({ ...prev, [theme]: Math.max(prev[theme] || 0, best) }));
-      });
+
+        // 🔁 Host: inicia (zera pontos de todos → pontuação POR QUIZ)
+        async function startGameHost(){
+          if (!selectedQuizKey || !quiz) return;
+          const rid = room || gameCode;
+          const { state, answers, players } = roomRefs(rid);
+
+          // ZERA a pontuação de todos os jogadores da sala (para este novo quiz)
+          const snap = await players.once("value");
+          const updates = {};
+          snap.forEach((child) => { updates[child.key + "/points"] = 0; });
+          if (Object.keys(updates).length) await players.update(updates);
+
+          // inicia estado do quiz
+          state.set({ started:true, qid:0, correct: quiz.questions[0].c, theme: selectedQuizKey, end:false });
+          savedOnceRef.current = false;
+
+          // watchers de respostas da Q0
+          answers(0).off();
+          answers(0).on("child_added", (snap)=>{
+            const { choice } = snap.val()||{}; const pidAns = snap.key;
+            if (Number(choice) === Number(quiz.questions[0].c)) players.child(pidAns).child("points").transaction(p => (p||0)+1);
+          });
+
+          setScreen("game");
+        }
+
+        // Host: próxima pergunta
+        function nextQuestionHost(){
+          const rid = room;
+          if (!quiz || !rid) return;
+          const next = qid + 1;
+          const { state, answers, players } = roomRefs(rid);
+          if (next >= total){
+            state.update({ started:false, qid: next, end:true, theme: selectedQuizKey });
+            setScreen("end");
+            saveFinalScoreIfNeeded({ theme: selectedQuizKey, totalQ: total, ended: true });
+            return;
+          }
+          state.set({ started:true, qid: next, correct: quiz.questions[next].c, theme: selectedQuizKey, end:false });
+          answers(next).off();
+          answers(next).on("child_added", (snap)=>{
+            const { choice } = snap.val()||{}; const pidAns = snap.key;
+            if (Number(choice) === Number(quiz.questions[next].c)) players.child(pidAns).child("points").transaction(p => (p||0)+1);
+          });
+          setPicked(null);
+        }
+
+        // Jogador: responde
+        function chooseAnswer(i){
+          if (picked !== null) return;
+          setPicked(i);
+          if (!room || !started) return;
+          db.ref(`rooms/${room}/answers/${qid}/${pid}`).set({ choice: i, at: Date.now() });
+        }
+
+        // 🔐 Salva histórico e atualiza leaderboard
+        function saveFinalScoreIfNeeded({ theme, totalQ, ended }) {
+          if (!user || !room || !ended || savedOnceRef.current) return;
+          savedOnceRef.current = true;
+
+          // tenta primeiro com uid (pid), depois com id temporário
+          const entryByUid = players.find(p => p.id === pid);
+          const entryByFallback = players.find(p => p.id === playerIdFallback);
+          const myPoints = (entryByUid?.points ?? entryByFallback?.points ?? 0);
+
+          const payload = {
+            theme,
+            points: myPoints,
+            totalQuestions: totalQ,
+            room,
+            at: Date.now(),
+            displayName: user.displayName || name || "Jogador",
+            uid: user.uid
+          };
+
+          // histórico do usuário
+          db.ref(`users/${user.uid}/results`).push(payload);
+
+          // leaderboard por tema (melhor pontuação)
+          const lbRef = db.ref(`leaderboards/${theme}/${user.uid}`);
+          lbRef.transaction(curr => {
+            if (!curr || myPoints > (curr.points || 0)) {
+              return {
+                points: myPoints,
+                displayName: payload.displayName,
+                photoURL: user.photoURL || null,
+                uid: user.uid,
+                updatedAt: Date.now()
+              };
+            }
+            return curr;
+          }, (err, committed, snap) => {
+            // atualiza cache local do recorde
+            const best = snap?.val()?.points ?? myPoints;
+            setUserBest(prev => ({ ...prev, [theme]: Math.max(prev[theme] || 0, best) }));
+          });
+        }
+
+        // Reset visual para voltar ao lobby
+        function resetUI(){ setScreen("waiting"); setSelectedQuizKey(null); setQid(0); setPicked(null); }
+
+        // Monta o texto de compartilhamento (dinâmico)
+function buildShareText() {
+  const themeName =
+    (selectedQuizKey && (QUIZZES[selectedQuizKey]?.name || normalizeQuizData(QUIZZES[selectedQuizKey])?.name)) ||
+    quiz?.name || "Quiz";
+
+  const norm = selectedQuizKey ? normalizeQuizData(QUIZZES[selectedQuizKey]) : quiz;
+  const totalQ = norm?.questions?.length || 0;
+
+  const sorted = players.slice().sort((a, b) => b.points - a.points);
+  const me =
+    sorted.find((p) => p.id === (user?.uid || playerIdFallback)) ||
+    sorted.find((p) => p.name?.toLowerCase() === (name || "").toLowerCase()) ||
+    { name: name || "Jogador", points: 0 };
+
+  const myRank = Math.max(1, sorted.findIndex((p) => p.id === me.id) + 1);
+  const percent = totalQ ? Math.round((me.points / totalQ) * 100) : 0;
+
+  // Texto curto, direto e “convidativo”
+  return `Acabei de marcar ${me.points}/${totalQ} (${percent}%) no quiz “${themeName}” no QuizVerso! `
+       + `Fiquei em ${myRank}º 🏆. Bora me superar?`;
+}
+
+// Aciona o compartilhamento com fallback
+async function shareResult() {
+  const text = buildShareText();
+  const url = window.location.origin + window.location.pathname; // link do seu site
+  const shareData = { title: "QuizVerso", text, url };
+
+  // 1) Web Share API (mobile/desktop modernos)
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      return;
+    } catch (e) {
+      // usuário cancelou ou não deu; cai pro fallback
     }
-    function resetUI(){ setScreen("waiting"); setSelectedQuizKey(null); setQid(0); setPicked(null); }
-    function buildShareText() {
-      const themeName = (selectedQuizKey && (QUIZZES[selectedQuizKey]?.name || normalizeQuizData(QUIZZES[selectedQuizKey])?.name)) || quiz?.name || "Quiz";
-      const norm = selectedQuizKey ? normalizeQuizData(QUIZZES[selectedQuizKey]) : quiz;
-      const totalQ = norm?.questions?.length || 0;
-      const sorted = players.slice().sort((a, b) => b.points - a.points);
-      const me = sorted.find((p) => p.id === (user?.uid || playerIdFallback)) || sorted.find((p) => p.name?.toLowerCase() === (name || "").toLowerCase()) || { name: name || "Jogador", points: 0 };
-      const myRank = Math.max(1, sorted.findIndex((p) => p.id === me.id) + 1);
-      const percent = totalQ ? Math.round((me.points / totalQ) * 100) : 0;
-      return `Acabei de marcar ${me.points}/${totalQ} (${percent}%) no quiz “${themeName}” no QuizVerso! ` + `Fiquei em ${myRank}º 🏆. Bora me superar?`;
-    }
-    async function shareResult() {
-      const text = buildShareText();
-      const url = window.location.origin + window.location.pathname;
-      const shareData = { title: "QuizVerso", text, url };
-      if (navigator.share) {
-        try { await navigator.share(shareData); return; } catch (e) {}
-      }
-      try {
-        await navigator.clipboard.writeText(`${text}\n${url}`);
-        alert("Mensagem copiada! Cole no WhatsApp/Instagram e desafie seus amigos 😉");
-        return;
-      } catch (e) {}
-      const wa = `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`;
-      window.open(wa, "_blank");
-    }
+  }
 
-    // ----- NOVO BLOCO DE RETORNO (JSX) -----
-    return (
-      <div className="min-h-[100svh] bg-gradient-to-br from-slate-900 via-indigo-900 to-fuchsia-900 bg-grid p-4 md:p-6 flex flex-col items-center justify-center">
-        <BackdropFX />
+  // 2) Clipboard (desktop)
+  try {
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+    alert("Mensagem copiada! Cole no WhatsApp/Instagram e desafie seus amigos 😉");
+    return;
+  } catch (e) {
+    // sem permissão de clipboard
+  }
 
-        {/* --- NOVO CONTÊINER PRINCIPAL --- */}
-        <div className="w-full max-w-lg mx-auto">
-
-          {/* --- HEADER APRIMORADO --- */}
-          <div className="flex items-center justify-between mb-4 text-white/80 px-4">
-            <div className="flex items-center gap-3 text-xs">
-              <span>Sala: </span>
-              <span className="font-mono">{room || "—"}</span>
-            </div>
-            <div>
-              {user ? (
-                <div className="flex items-center gap-2">
-                  {user.photoURL && <img src={user.photoURL} alt="avatar" className="w-6 h-6 rounded-full" />}
-                  <span className="text-xs font-semibold">{user.displayName || "Você"}</span>
-                  <button onClick={signOutGoogle} className="text-xs underline hover:opacity-80">Sair</button>
-                </div>
-              ) : (
-                <button onClick={signInGoogle} className="text-xs underline hover:opacity-80">Entrar com Google</button>
-              )}
-            </div>
-          </div>
-
-          {/* --- RENDERIZAÇÃO DAS TELAS --- */}
-          <div className="w-full">
-            {screen === "lobby" && (
-              <div className="glass relative p-6 sm:p-8 md:p-10 flex flex-col justify-center rounded-2xl">
-                <div className="shine" />
-                
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center gap-3">
-                    <span className="w-10 h-10 grid place-items-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-800/40 floating">?</span>
-                    <h1 className="text-4xl md:text-5xl font-extrabold gradient-title tracking-tight">QuizVerso</h1>
-                  </div>
-                  <p className="text-white/70 mt-2">
-                    {isJoining ? "Entre na sala para começar a jogar!" : "Comece um novo desafio!"}
-                  </p>
-                </div>
-
-                <div className="w-full max-w-sm mx-auto">
-                  {!user && (
-                     <input
-                      className="input-ghost text-center text-white w-full px-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-400/40 placeholder:text-white/50"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="👤 Digite seu nome"
-                    />
-                  )}
-
-                  {user && (
-                    <div className="text-center bg-white/5 border border-white/10 rounded-lg py-3 mb-4">
-                      <span className="font-semibold text-white">{user.displayName}</span>
+  // 3) WhatsApp direto (super-fallback)
+  const wa = `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`;
+  window.open(wa, "_blank");
+}
+        
+        return (
+          <div className="min-h-[100svh] p-4 md:p-6 flex items-center justify-center">
+             <BackdropFX />
+            <div className="w-full max-w-5xl">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4 text-white/80">
+                <div className="flex items-center gap-3">
+                  <div className="text-xs">Sala: <span className="font-mono">{room || "—"}</span></div>
+                  {user ? (
+                    <div className="flex items-center gap-2">
+                      {user.photoURL && <img src={user.photoURL} alt="avatar" className="w-6 h-6 rounded-full" />}
+                      <span className="text-xs">{user.displayName || "Você"}</span>
+                      <button onClick={signOutGoogle} className="text-xs underline hover:opacity-80">Sair</button>
                     </div>
-                  )}
-
-                  {!user && (
-                    <>
-                      <div className="flex items-center my-4 text-sm text-white/50">
-                        <hr className="flex-1 border-white/20" />
-                        <span className="px-3">OU</span>
-                        <hr className="flex-1 border-white/20" />
-                      </div>
-                      <button
-                        onClick={signInGoogle}
-                        className="w-full px-5 py-3 rounded-full font-semibold bg-white text-slate-800 inline-flex items-center justify-center gap-3 hover:bg-slate-200 transition"
-                      >
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-5 h-5" />
-                        Entrar com o Google
-                      </button>
-                    </>
-                  )}
-                  
-                  {isJoining && (
-                    <div className="mt-4">
-                      <input
-                        className="input-ghost text-center font-mono tracking-widest text-white w-full px-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-cyan-400/30 placeholder:text-white/50"
-                        value={joinCode}
-                        onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                        placeholder="🔑 DIGITE O CÓDIGO"
-                      />
-                    </div>
-                  )}
-
-                  <div className="mt-6">
-                    <button
-                      onClick={isJoining ? handleJoin : handleCreate}
-                      className="btn-neo w-full px-5 py-3 rounded-full font-semibold text-white inline-flex items-center justify-center gap-2"
-                    >
-                      {isJoining ? <span>🎮 Entrar na Sala</span> : <span>🚀 Criar Jogo</span>}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-5 text-center text-sm text-white/80">
-                  {isJoining ? (
-                    <a href="#" onClick={(e) => { e.preventDefault(); setIsJoining(false); }} className="underline hover:text-white">
-                      Prefere criar uma nova sala?
-                    </a>
                   ) : (
-                    <a href="#" onClick={(e) => { e.preventDefault(); setIsJoining(true); }} className="underline hover:text-white">
-                      Já tem um código? Entrar em uma sala
-                    </a>
+                    <button onClick={signInGoogle} className="text-xs underline hover:opacity-80">Entrar com Google</button>
                   )}
                 </div>
               </div>
-            )}
 
-            {screen === "waiting" && (
-              <Card>
-                <h2 className="text-2xl font-bold mb-2">Sala de Espera</h2>
-                <p className="text-white/70 mb-4">Compartilhe o código e aguarde os jogadores entrarem.</p>
-                <div onClick={copyCode} className="relative border-2 border-dashed border-white/30 rounded-lg p-4 text-center text-xl font-bold select-none cursor-pointer active:scale-[.99]">
-                  {room || gameCode}
-                  {copied && (<span className="absolute -top-3 right-3 bg-emerald-500 text-white text-xs px-2 py-1 rounded-full shadow">Copiado!</span>)}
-                </div>
-                <p className="text-sm text-white/60 mt-2 text-center">Clique no código para copiar</p>
-                <h3 className="text-xl font-semibold mt-6 mb-2">Jogadores na Sala:</h3>
-                <ul className="space-y-2">
-                  {players.map((p) => (
-                    <li key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
-                      <span className="font-medium">{p.name}</span>
-                      <span className="text-sm text-white/70">{p.points} pts</span>
-                    </li>
-                  ))}
-                </ul>
-                {isHost ? (
-                  <div className="mt-6">
-                    <h3 className="text-xl font-semibold mb-2">Escolha o Tema do Quiz:</h3>
-                    <div className="grid grid-cols-1 gap-2 mb-4">
-                      {Object.entries(QUIZZES).map(([key, q]) => {
-                        const totalQ = normalizeQuizData(q).questions.length;
-                        const best = userBest[key] ?? 0;
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => setSelectedQuizKey(key)}
-                            className={`text-left px-4 py-3 rounded-xl border transition transform ${
-                              selectedQuizKey === key
-                                ? "bg-indigo-600/90 text-white border-indigo-400 shadow-lg scale-[1.01]"
-                                : "bg-white/5 text-white/90 hover:bg-white/10 border-white/10"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="font-semibold">{q.name}</div>
-                              <div className="text-xs opacity-75 flex items-center gap-3">
-                                {user ? (
-                                  <span className="inline-flex items-center gap-1">
-                                    <span className="text-yellow-300">🏆</span>
-                                    <span className="font-semibold">{best}/{totalQ}</span>
-                                    <span>melhor</span>
-                                  </span>
-                                ) : null}
-                                <span>{totalQ} questões</span>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <Button onClick={startGameHost} disabled={!selectedQuizKey} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Começar o Jogo!</Button>
-                  </div>
-                ) : (
-                  <p className="mt-6 text-center font-semibold text-white/70">Aguardando o anfitrião começar...</p>
-                )}
-              </Card>
-            )}
+{screen === "lobby" && (
+  <div className="glass relative w-full max-w-lg p-6 sm:p-8 md:p-10 flex flex-col items-center justify-center rounded-2xl mx-auto">
+    <div className="shine" />
 
-            {screen === "game" && (
-              <Card>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="text-sm font-medium text-white/60">{quiz?.name}</div>
-                    <div className="text-lg font-bold">Pergunta <span>{qid + 1}</span>/<span>{total}</span></div>
+    {/* TÍTULO */}
+    <div className="text-center mb-6">
+      <div className="inline-flex items-center gap-3">
+        <span className="w-10 h-10 grid place-items-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-800/40 floating">?</span>
+        <h1 className="text-4xl md:text-5xl font-extrabold gradient-title tracking-tight">QuizVerso</h1>
+      </div>
+      <p className="text-white/70 mt-2">
+        {isJoining ? "Entre na sala para começar a jogar!" : "Comece um novo desafio!"}
+      </p>
+    </div>
+
+    {/* SEÇÃO DE IDENTIFICAÇÃO */}
+    <div>
+      {/* Input de Nome */}
+      <input
+        className="input-ghost text-center text-white w-full px-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-400/40 placeholder:text-white/50"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="👤 Digite seu nome"
+      />
+
+      {/* Divisor "OU" */}
+      <div className="flex items-center my-4 text-sm text-white/50">
+        <hr className="flex-1 border-white/20" />
+        <span className="px-3">OU</span>
+        <hr className="flex-1 border-white/20" />
+      </div>
+
+      {/* Botão Google */}
+      <button
+        onClick={signInGoogle}
+        className="w-full px-5 py-3 rounded-full font-semibold bg-white text-slate-800 inline-flex items-center justify-center gap-3 hover:bg-slate-200 transition"
+      >
+        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-5 h-5" />
+        Entrar com o Google
+      </button>
+    </div>
+
+    {/* CAMPO DE CÓDIGO (CONDICIONAL) */}
+    {isJoining && (
+      <div className="mt-4">
+        <input
+          className="input-ghost text-center font-mono tracking-widest text-white w-full px-3 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-cyan-400/30 placeholder:text-white/50"
+          value={joinCode}
+          onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+          placeholder="🔑 DIGITE O CÓDIGO"
+        />
+      </div>
+    )}
+
+    {/* BOTÃO DE AÇÃO PRINCIPAL (DINÂMICO) */}
+    <div className="mt-6">
+      <button
+        onClick={isJoining ? handleJoin : handleCreate}
+        className="btn-neo w-full px-5 py-3 rounded-full font-semibold text-white inline-flex items-center justify-center gap-2"
+      >
+        {isJoining ? <span>🎮 Entrar na Sala</span> : <span>🚀 Criar Jogo</span>}
+      </button>
+    </div>
+
+    {/* LINK PARA ALTERNAR O MODO */}
+    <div className="mt-5 text-center text-sm text-white/80">
+      {isJoining ? (
+        <a href="#" onClick={(e) => { e.preventDefault(); setIsJoining(false); }} className="underline hover:text-white">
+          Prefere criar uma nova sala?
+        </a>
+      ) : (
+        <a href="#" onClick={(e) => { e.preventDefault(); setIsJoining(true); }} className="underline hover:text-white">
+          Já tem um código? Entrar em uma sala
+        </a>
+      )}
+    </div>
+  </div>
+)}
+
+  
+              {screen === "waiting" && (
+                <Card>
+                  <h2 className="text-2xl font-bold mb-2">Sala de Espera</h2>
+                  <p className="text-white/70 mb-4">Compartilhe o código e aguarde os jogadores entrarem.</p>
+                  <div onClick={copyCode} className="relative border-2 border-dashed border-white/30 rounded-lg p-4 text-center text-xl font-bold select-none cursor-pointer active:scale-[.99]">
+                    {room || gameCode}
+                    {copied && (<span className="absolute -top-3 right-3 bg-emerald-500 text-white text-xs px-2 py-1 rounded-full shadow">Copiado!</span>)}
                   </div>
-                </div>
-                <div className="mb-4 text-xl font-semibold">{current?.q || "Carregando pergunta..."}</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {current?.a?.map((alt, i) => {
-                    const isPicked = picked === i;
-                    const isCorrect = picked !== null && i === current.c;
-                    const base = "px-4 py-3 rounded-xl border text-left transition transform";
-                    const state = picked === null ? "bg-white/5 hover:bg-white/10 hover:scale-[1.01] border-white/10"
-                      : isCorrect ? "bg-emerald-500/20 border-emerald-400"
-                      : isPicked ? "bg-rose-500/20 border-rose-400" : "bg-white/5 opacity-60 border-white/10";
-                    const motion = isCorrect ? "pop-anim" : isPicked && !isCorrect ? "shake-anim" : "";
-                    return (
-                      <button key={i} className={`${base} ${state} ${motion}`} onClick={() => chooseAnswer(i)}>
-                        <div className="flex items-center gap-3">
-                          <span className={`shrink-0 w-8 h-8 grid place-items-center rounded-full text-sm font-bold ${picked === null ? "bg-white/10 text-white/80" : isCorrect ? "bg-emerald-500 text-white" : isPicked ? "bg-rose-500 text-white" : "bg-white/10 text-white/60"}`}>
-                            {["A","B","C","D","E","F"][i]}
-                          </span>
-                          <span className="flex-1">{alt}</span>
-                          {picked !== null && (<span className="text-lg">{isCorrect ? "✅" : isPicked ? "❌" : ""}</span>)}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="mt-6">
-                  <h4 className="text-lg font-semibold mb-2">Ranking (ao vivo)</h4>
+                  <p className="text-sm text-white/60 mt-2 text-center">Clique no código para copiar</p>
+
+                  <h3 className="text-xl font-semibold mt-6 mb-2">Jogadores na Sala:</h3>
                   <ul className="space-y-2">
-                    {players.slice().sort((a,b)=> b.points - a.points).map((p, i) => (
-                      <li key={p.id + i} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
-                        <div className="flex items-center gap-3">
-                          <span className="w-6 text-center font-bold">{i+1}</span>
-                          <span className="font-medium">{p.name}</span>
-                        </div>
+                    {players.map((p) => (
+                      <li key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
+                        <span className="font-medium">{p.name}</span>
                         <span className="text-sm text-white/70">{p.points} pts</span>
                       </li>
                     ))}
                   </ul>
-                </div>
-                <div className="mt-6">
-                  <div className="relative w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-2 bg-indigo-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                  </div>
-                  <div className="text-xs text-white/60 mt-1">Progresso: {pct}%</div>
-                </div>
-                <div className="mt-6 text-center">
-                  {isHost ? (
-                    <Button onClick={nextQuestionHost} disabled={picked === null} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Próxima Pergunta (Host)</Button>
-                  ) : (
-                    <div className="text-sm text-white/60">Aguardando o anfitrião avançar…</div>
-                  )}
-                </div>
-              </Card>
-            )}
 
-            {screen === "end" && (
-              <>
-                <Confetti count={100} />
-                <Card className="text-center relative z-10">
-                  <h1 className="text-4xl font-extrabold mb-2">Fim de Jogo!</h1>
-                  <h2 className="text-2xl font-semibold text-indigo-200 mb-6">
-                    O grande vencedor é... <span className="text-3xl text-white">{players.slice().sort((a,b)=>b.points-a.points)[0]?.name || "—"}</span>!
-                  </h2>
-                  <h3 className="text-xl font-semibold mt-4 mb-2">Placar Final:</h3>
-                  <ul className="space-y-2 max-w-md mx-auto">
-                    {players.slice().sort((a,b)=> b.points - a.points).map((p, i) => (
-                      <li key={p.id + i} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
-                        <span className="font-medium">{i + 1}. {p.name}</span>
-                        <span className="text-sm text-white/70">{p.points} pts</span>
-                      </li>
-                    ))}
-                  </ul>
-                 <div className="mt-6 grid gap-3 max-w-sm mx-auto">
-                    <button
-                      onClick={shareResult}
-                      className="w-full rounded-full px-5 py-3 font-semibold text-white btn-neo shadow-lg shadow-indigo-900/40 hover:brightness-105 active:scale-[.99] inline-flex items-center justify-center gap-2"
-                    >
-                      <span>📣</span> Compartilhar meu resultado
-                    </button>
-                    <Button onClick={resetUI} className="rounded-full">Menu Principal</Button>
-                    <div className="text-xs text-white/60 text-center">
-                      Dica: compartilhar aumenta a disputa e traz novos jogadores para a sala!
+                  {isHost ? (
+                    <div className="mt-6">
+                      <h3 className="text-xl font-semibold mb-2">Escolha o Tema do Quiz:</h3>
+                      <div className="grid grid-cols-1 gap-2 mb-4">
+                        {Object.entries(QUIZZES).map(([key, q]) => {
+                          const totalQ = normalizeQuizData(q).questions.length;
+                          const best = userBest[key] ?? 0;
+                          return (
+                            <button
+                              key={key}
+                              onClick={() => setSelectedQuizKey(key)}
+                              className={`text-left px-4 py-3 rounded-xl border transition transform ${
+                                selectedQuizKey === key
+                                  ? "bg-indigo-600/90 text-white border-indigo-400 shadow-lg scale-[1.01]"
+                                  : "bg-white/5 text-white/90 hover:bg-white/10 border-white/10"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="font-semibold">{q.name}</div>
+                                <div className="text-xs opacity-75 flex items-center gap-3">
+                                  {user ? (
+                                    <span className="inline-flex items-center gap-1">
+                                      <span className="text-yellow-300">🏆</span>
+                                      <span className="font-semibold">{best}/{totalQ}</span>
+                                      <span>melhor</span>
+                                    </span>
+                                  ) : null}
+                                  <span>{totalQ} questões</span>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <Button onClick={startGameHost} disabled={!selectedQuizKey} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Começar o Jogo!</Button>
                     </div>
+                  ) : (
+                    <p className="mt-6 text-center font-semibold text-white/70">Aguardando o anfitrião começar...</p>
+                  )}
+                </Card>
+              )}
+
+              {screen === "game" && (
+                <Card>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <div className="text-sm font-medium text-white/60">{quiz?.name}</div>
+                      <div className="text-lg font-bold">Pergunta <span>{qid + 1}</span>/<span>{total}</span></div>
+                    </div>
+                  </div>
+
+                  <div className="mb-4 text-xl font-semibold">{current?.q || "Carregando pergunta..."}</div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {current?.a?.map((alt, i) => {
+                      const isPicked = picked === i;
+                      const isCorrect = picked !== null && i === current.c;
+                      const base = "px-4 py-3 rounded-xl border text-left transition transform";
+                      const state = picked === null ? "bg-white/5 hover:bg-white/10 hover:scale-[1.01] border-white/10"
+                        : isCorrect ? "bg-emerald-500/20 border-emerald-400"
+                        : isPicked ? "bg-rose-500/20 border-rose-400" : "bg-white/5 opacity-60 border-white/10";
+                      const motion = isCorrect ? "pop-anim" : isPicked && !isCorrect ? "shake-anim" : "";
+                      return (
+                        <button key={i} className={`${base} ${state} ${motion}`} onClick={() => chooseAnswer(i)}>
+                          <div className="flex items-center gap-3">
+                            <span className={`shrink-0 w-8 h-8 grid place-items-center rounded-full text-sm font-bold ${picked === null ? "bg-white/10 text-white/80" : isCorrect ? "bg-emerald-500 text-white" : isPicked ? "bg-rose-500 text-white" : "bg-white/10 text-white/60"}`}>
+                              {["A","B","C","D","E","F"][i]}
+                            </span>
+                            <span className="flex-1">{alt}</span>
+                            {picked !== null && (<span className="text-lg">{isCorrect ? "✅" : isPicked ? "❌" : ""}</span>)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-6">
+                    <h4 className="text-lg font-semibold mb-2">Ranking (ao vivo)</h4>
+                    <ul className="space-y-2">
+                      {players.slice().sort((a,b)=> b.points - a.points).map((p, i) => (
+                        <li key={p.id + i} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
+                          <div className="flex items-center gap-3">
+                            <span className="w-6 text-center font-bold">{i+1}</span>
+                            <span className="font-medium">{p.name}</span>
+                          </div>
+                          <span className="text-sm text-white/70">{p.points} pts</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-6">
+                    <div className="relative w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-2 bg-indigo-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="text-xs text-white/60 mt-1">Progresso: {pct}%</div>
+                  </div>
+
+                  <div className="mt-6 text-center">
+                    {isHost ? (
+                      <Button onClick={nextQuestionHost} disabled={picked === null} className="rounded-full disabled:opacity-60 disabled:cursor-not-allowed">Próxima Pergunta (Host)</Button>
+                    ) : (
+                      <div className="text-sm text-white/60">Aguardando o anfitrião avançar…</div>
+                    )}
                   </div>
                 </Card>
-              </>
-            )}
+              )}
+
+              {screen === "end" && (
+                <>
+                  <Confetti count={100} />
+                  <Card className="text-center relative z-10">
+                    <h1 className="text-4xl font-extrabold mb-2">Fim de Jogo!</h1>
+                    <h2 className="text-2xl font-semibold text-indigo-200 mb-6">
+                      O grande vencedor é... <span className="text-3xl text-white">{players.slice().sort((a,b)=>b.points-a.points)[0]?.name || "—"}</span>!
+                    </h2>
+                    <h3 className="text-xl font-semibold mt-4 mb-2">Placar Final:</h3>
+                    <ul className="space-y-2 max-w-md mx-auto">
+                      {players.slice().sort((a,b)=> b.points - a.points).map((p, i) => (
+                        <li key={p.id + i} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2 border border-white/10">
+                          <span className="font-medium">{i + 1}. {p.name}</span>
+                          <span className="text-sm text-white/70">{p.points} pts</span>
+                        </li>
+                      ))}
+                    </ul>
+                   <div className="mt-6 grid gap-3 max-w-sm mx-auto">
+  {/* Botão chamativo de compartilhar */}
+  <button
+    onClick={shareResult}
+    className="w-full rounded-full px-5 py-3 font-semibold text-white btn-neo
+               shadow-lg shadow-indigo-900/40 hover:brightness-105 active:scale-[.99]
+               inline-flex items-center justify-center gap-2"
+  >
+    <span>📣</span> Compartilhar meu resultado
+  </button>
+
+  {/* Voltar / Jogar de novo */}
+  <Button onClick={resetUI} className="rounded-full">Menu Principal</Button>
+
+  {/* Mini dica opcional */}
+  <div className="text-xs text-white/60 text-center">
+    Dica: compartilhar aumenta a disputa e traz novos jogadores para a sala!
+  </div>
+</div>
+
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
-    );
-}
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
+
