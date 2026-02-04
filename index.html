@@ -1580,7 +1580,20 @@ body { font-family: 'Kanit', ui-sans-serif, system-ui, -apple-system, Segoe UI, 
 }
 
  function App() {
-        
+
+// 🔊 SISTEMA DE SOM SIMPLES
+const playSound = (type) => {
+  const sounds = {
+    correct: "https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3", // Ding
+    wrong: "https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3",   // Buzz
+    tick: "https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3",    // Tick
+    win: "https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"       // Fanfarra
+  };
+  const audio = new Audio(sounds[type]);
+  audio.volume = 0.5;
+  audio.play().catch(e => console.log("Audio play blocked by browser"));
+};   
+   
         const [screen, setScreen] = useState("lobby");
         const [name, setName] = useState("");
         const [isHost, setIsHost] = useState(true);
@@ -2162,5 +2175,6 @@ async function shareResult() {
     </script>
   </body>
 </html>
+
 
 
