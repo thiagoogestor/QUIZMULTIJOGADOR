@@ -1610,6 +1610,8 @@ const playSound = (type) => {
         const [started, setStarted] = useState(false);
         const [joinCode, setJoinCode] = useState("");
         const [isJoining, setIsJoining] = useState(false);
+        const [timeLeft, setTimeLeft] = useState(15); // 15 segundos por pergunta
+        const [streak, setStreak] = useState(0); // Combo de acertos seguidos
 
         const [userBest, setUserBest] = useState({}); // 🏆 recordes por quiz do usuário
         const savedOnceRef = useRef(false);
@@ -2175,6 +2177,7 @@ async function shareResult() {
     </script>
   </body>
 </html>
+
 
 
 
