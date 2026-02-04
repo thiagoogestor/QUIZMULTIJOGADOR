@@ -1642,6 +1642,30 @@ const playSound = (type) => {
           fetchBests(user);
         }, [user]);
 
+   // ⏳ LÓGICA DO TIMER
+useEffect(() => {
+  if (screen !== "game" || picked !== null) return;
+
+  // Se o tempo acabar
+  if (timeLeft === 0) {
+    playSound("wrong");
+    setPicked(-1); // -1 indica que o tempo acabou
+    setStreak(0); // Zera o combo
+    return;
+  }
+
+  // Toca som de "tick" nos últimos 5 segundos
+  if (timeLeft <= 5) playSound("tick");
+
+  const timerId = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+  return () => clearTimeout(timerId);
+}, [timeLeft, screen, picked]);
+
+// Reseta o timer quando muda a pergunta (monitorando qid)
+useEffect(() => {
+  setTimeLeft(15);
+}, [qid]);
+
         // Normaliza o quiz selecionado
         const quiz = normalizeQuizData(selectedQuizKey ? QUIZZES[selectedQuizKey] : null);
         const total = quiz?.questions.length ?? 0;
@@ -2177,6 +2201,7 @@ async function shareResult() {
     </script>
   </body>
 </html>
+
 
 
 
